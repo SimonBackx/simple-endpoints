@@ -37,13 +37,11 @@ export class Request {
             throw new Error("Something went wrong");
         }
         const body = new Promise<string>((resolve, reject) => {
-            console.log("Started listining for data");
             const chunks: any[] = [];
             let gotError = false;
 
             // we can access HTTP headers
             req.on("data", (chunk) => {
-                console.log(chunk + "");
                 chunks.push(chunk);
             });
             req.on("error", (err) => {
@@ -55,21 +53,19 @@ export class Request {
                 if (gotError) {
                     return;
                 }
-                console.log("Received full body");
                 const body = Buffer.concat(chunks).toString();
                 resolve(body);
             });
         });
 
         const parsedUrl = urlParser.parse(req.url, true);
-        console.log(req.headers.host);
-        console.log(parsedUrl);
-
         let host = req.headers.host ?? "";
 
         // Remove port
         const splitted = host.split(":");
         host = splitted[0];
+
+        console.log(req.method + " " + parsedUrl.pathname);
 
         return new Request({
             method: req.method as HttpMethod,

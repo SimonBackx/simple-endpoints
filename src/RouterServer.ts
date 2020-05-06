@@ -63,6 +63,8 @@ export class RouterServer {
                         ],
                     })
                 );
+
+                console.error(e);
             }
 
             return;
