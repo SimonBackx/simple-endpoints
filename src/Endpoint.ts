@@ -1,9 +1,9 @@
-import { Decoder, Encodeable } from '@simonbackx/simple-encoding';
+import { Decoder, Encodeable } from "@simonbackx/simple-encoding";
 
 import { DecodedRequest } from "./DecodedRequest";
 import { EncodedResponse } from "./EncodedResponse";
-import { EndpointError } from './EndpointError';
-import { EndpointErrors } from './EndpointErrors';
+import { EndpointError } from "./EndpointError";
+import { EndpointErrors } from "./EndpointErrors";
 import { Request } from "./Request";
 import { Response } from "./Response";
 
@@ -15,15 +15,15 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
     protected abstract handle(request: DecodedRequest<Params, Query, RequestBody>): Promise<Response<ResponseBody>>;
 
     async getResponse(request: Request, params: Params): Promise<Response<ResponseBody>> {
-        let decodedRequest: DecodedRequest<Params, Query, RequestBody>
+        let decodedRequest: DecodedRequest<Params, Query, RequestBody>;
         try {
             decodedRequest = await DecodedRequest.fromRequest(request, params, this.queryDecoder, this.bodyDecoder);
         } catch (e) {
             if (e.code && e.message) {
-                throw new EndpointError(e)
+                throw new EndpointError(e);
             }
             if (e.errors) {
-                throw new EndpointErrors(...e.errors)
+                throw new EndpointErrors(...e.errors);
             }
             throw e;
         }
@@ -31,13 +31,32 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         return await this.handle(decodedRequest);
     }
 
+    // Build for testing
+    // it emulates some extra parts of the request to check if everything works
+    async test(request: Request): Promise<Response<ResponseBody>> {
+        const [match, params] = this.doesMatch(request);
+        if (match) {
+            if (!params) {
+                throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
+            }
+            const response = await this.getResponse(request, params);
+
+            // Check if encoding works (ignoring the response)
+            if (response.body !== undefined) {
+                response.body.encode();
+            }
+
+            return response;
+        }
+        throw new Error("Route is not matching");
+    }
+
     async run(request: Request): Promise<EncodedResponse | null> {
         const [match, params] = this.doesMatch(request);
         if (match) {
             if (!params) {
-                throw new Error("Compiler doesn't optimize for this, but this should not be able to run")
+                throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
             }
-            console.log("Endpoint matched");
             return new EncodedResponse(await this.getResponse(request, params));
         }
         return null;
