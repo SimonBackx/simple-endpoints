@@ -1,4 +1,4 @@
-import { Data } from '@simonbackx/simple-encoding';
+import { Data } from "@simonbackx/simple-encoding";
 
 // Error that is caused by a client and should be reported to the client
 export class EndpointError extends Error {
@@ -11,10 +11,10 @@ export class EndpointError extends Error {
     /**
      * Used to determine the associated HTTP status code when thrown in an endpoint
      */
-    statusCode?: number
+    statusCode?: number;
 
     /// Error counter. All errors get numbered since the start of the server
-    static counter: number = 0;
+    static counter = 0;
 
     constructor(error: { code: string; message: string; human?: string; field?: string; statusCode?: number; id?: string }) {
         super(error.message);
@@ -22,8 +22,8 @@ export class EndpointError extends Error {
         this.message = error.message;
         this.human = error.human;
         this.field = error.field;
-        this.statusCode = error.statusCode
-        this.id = error.id ?? this.generateID()
+        this.statusCode = error.statusCode;
+        this.id = error.id ?? this.generateID();
 
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, EndpointError);
@@ -43,8 +43,8 @@ export class EndpointError extends Error {
             code: this.code,
             message: this.message,
             human: this.human,
-            field: this.field
-        }
+            field: this.field,
+        };
     }
 
     static decode(data: Data): EndpointError {
@@ -54,28 +54,28 @@ export class EndpointError extends Error {
             message: data.field("message").string,
             human: data.optionalField("human")?.string,
             field: data.optionalField("field")?.string,
-        })
+        });
     }
 
     doesMatchFields(fields: string[]): boolean {
         for (const field of fields) {
             if (this.doesMatchField(field)) {
-                return true
+                return true;
             }
         }
-        return false
+        return false;
     }
 
     doesMatchField(field: string): boolean {
         if (!this.field) {
-            return false
+            return false;
         }
 
-        return (this.field.startsWith(field));
+        return this.field.startsWith(field);
     }
 
     generateID(): string {
-        EndpointError.counter += 1
-        return new Date().getTime() + "-" + EndpointError.counter
+        EndpointError.counter += 1;
+        return new Date().getTime() + "-" + EndpointError.counter;
     }
 }

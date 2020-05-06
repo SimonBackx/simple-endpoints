@@ -1,9 +1,9 @@
 import { Decoder, Encodeable } from '@simonbackx/simple-encoding';
 
-import { EndpointError } from './EndpointError';
-import { EndpointErrors } from './EndpointErrors';
 import { DecodedRequest } from "./DecodedRequest";
 import { EncodedResponse } from "./EncodedResponse";
+import { EndpointError } from './EndpointError';
+import { EndpointErrors } from './EndpointErrors';
 import { Request } from "./Request";
 import { Response } from "./Response";
 

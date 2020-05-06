@@ -1,7 +1,7 @@
-import { EndpointError } from './EndpointError';
-import { EndpointErrors } from './EndpointErrors';
 import http from "http";
 
+import { EndpointError } from "./EndpointError";
+import { EndpointErrors } from "./EndpointErrors";
 import { Request } from "./Request";
 import { Router } from "./Router";
 
@@ -29,7 +29,7 @@ export class RouterServer {
                 res.writeHead(404);
                 res.end("Endpoint not found.");
             } else {
-                if (!response.headers['Cache-Control']) response.headers['Cache-Control'] = "no-cache"
+                if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
                 res.writeHead(response.status, response.headers);
                 res.end(response.body);
             }
@@ -53,14 +53,16 @@ export class RouterServer {
                     "Cache-Control": "no-cache",
                 });
                 // Todo: hide information if not running in development mode
-                res.end(JSON.stringify({
-                    errors: [
-                        {
-                            code: "internal_error",
-                            message: e.message
-                        }
-                    ]
-                }));
+                res.end(
+                    JSON.stringify({
+                        errors: [
+                            {
+                                code: "internal_error",
+                                message: e.message,
+                            },
+                        ],
+                    })
+                );
             }
 
             return;
