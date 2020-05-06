@@ -52,6 +52,9 @@ export class EndpointErrors extends Error {
 
     throwIfNotEmpty() {
         if (this.errors.length > 0) {
+            if (this.errors.length == 1) {
+                throw this.errors[0];
+            }
             throw this;
         }
     }
