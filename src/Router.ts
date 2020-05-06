@@ -67,7 +67,7 @@ export class Router {
         for (const file of files) {
             const p = folder + "/" + file;
             if (file.includes(".test.")) {
-                return;
+                continue;
             }
             const imported = await import(p);
             for (const key in imported) {
