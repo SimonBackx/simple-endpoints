@@ -78,4 +78,8 @@ export class EndpointError extends Error {
         EndpointError.counter += 1;
         return new Date().getTime() + "-" + EndpointError.counter;
     }
+
+    addNamespace(field: string) {
+        this.field = this.field ? this.field + "." + field : field;
+    }
 }

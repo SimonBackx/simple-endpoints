@@ -1,4 +1,4 @@
-import { Data } from '@simonbackx/simple-encoding';
+import { Data } from "@simonbackx/simple-encoding";
 
 import { EndpointError } from "./EndpointError";
 
@@ -7,7 +7,7 @@ export class EndpointErrors extends Error {
     errors: EndpointError[];
 
     constructor(...errors: EndpointError[]) {
-        super(errors.map(e => e.toString()).join("\n"));
+        super(errors.map((e) => e.toString()).join("\n"));
         this.errors = errors;
     }
 
@@ -16,24 +16,24 @@ export class EndpointErrors extends Error {
             this.errors.push(error);
             this.message += "\n" + error.toString();
         } else if (error instanceof EndpointErrors) {
-            this.errors.push(...error.errors)
+            this.errors.push(...error.errors);
             this.message += "\n" + error.toString();
         } else {
-            throw new Error("Unsupported addError")
+            throw new Error("Unsupported addError");
         }
     }
 
     get statusCode(): number | undefined {
-        return this.errors.find(e => e.statusCode !== undefined)?.statusCode
+        return this.errors.find((e) => e.statusCode !== undefined)?.statusCode;
     }
 
     removeErrorAt(index: number) {
-        this.errors.splice(index, 1)
+        this.errors.splice(index, 1);
     }
 
     addNamespace(field: string) {
-        this.errors.forEach(e => {
-            e.field = e.field ? e.field + "." + field : field;
+        this.errors.forEach((e) => {
+            e.addNamespace(field);
         });
     }
 
@@ -42,12 +42,12 @@ export class EndpointErrors extends Error {
      */
     toJSON() {
         return {
-            errors: this.errors
-        }
+            errors: this.errors,
+        };
     }
 
     static decode(data: Data): EndpointErrors {
-        return new EndpointErrors(...data.field("errors").array(EndpointError))
+        return new EndpointErrors(...data.field("errors").array(EndpointError));
     }
 
     throwIfNotEmpty() {
