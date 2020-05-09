@@ -82,4 +82,9 @@ export class EndpointError extends Error {
     addNamespace(field: string) {
         this.field = this.field ? this.field + "." + field : field;
     }
+
+    /// Returns a human description of all the errors
+    getHuman(): string {
+        return this.human ?? this.message;
+    }
 }
