@@ -58,4 +58,12 @@ export class EndpointErrors extends Error {
             throw this;
         }
     }
+
+    /// Returns a human description of all the errors
+    getHuman(): string {
+        return this.errors
+            .filter((e) => !!e.human)
+            .map((e) => e.human)
+            .join("\n");
+    }
 }
