@@ -37,6 +37,14 @@ export class EndpointErrors extends Error {
         });
     }
 
+    containsCode(code: string): boolean {
+        return this.errors.findIndex((e) => e.code && e.code === code) !== -1;
+    }
+
+    containsFieldThatStartsWith(prefix: string): boolean {
+        return this.errors.findIndex((e) => e.field && e.field.startsWith(prefix)) !== -1;
+    }
+
     /**
      * Required to override the default toJSON behaviour of Error
      */
