@@ -25,33 +25,41 @@ export class RouterServer {
 
         try {
             const response = await this.router.run(request);
+
             if (!response) {
-                res.writeHead(404);
+                const headers = {};
+                if (process.env && process.env.NODE_ENV == "development") {
+                    headers["Access-Control-Allow-Origin"] = "*";
+                }
+                res.writeHead(404, headers);
                 res.end("Endpoint not found.");
             } else {
+                if (process.env && process.env.NODE_ENV == "development") {
+                    response.headers["Access-Control-Allow-Origin"] = "*";
+                }
+
                 if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
                 res.writeHead(response.status, response.headers);
                 res.end(response.body);
             }
         } catch (e) {
+            const headers = {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache",
+            };
+            if (process.env && process.env.NODE_ENV == "development") {
+                headers["Access-Control-Allow-Origin"] = "*";
+            }
+
             // Todo: implement special errors to send custom status codes
             if (e instanceof EndpointError) {
-                res.writeHead(e.statusCode ?? 400, {
-                    "Content-Type": "application/json",
-                    "Cache-Control": "no-cache",
-                });
+                res.writeHead(e.statusCode ?? 400, headers);
                 res.end(JSON.stringify(new EndpointErrors(e)));
             } else if (e instanceof EndpointErrors) {
-                res.writeHead(e.statusCode ?? 400, {
-                    "Content-Type": "application/json",
-                    "Cache-Control": "no-cache",
-                });
+                res.writeHead(e.statusCode ?? 400, headers);
                 res.end(JSON.stringify(e));
             } else {
-                res.writeHead(500, {
-                    "Content-Type": "application/json",
-                    "Cache-Control": "no-cache",
-                });
+                res.writeHead(500, headers);
                 // Todo: hide information if not running in development mode
                 res.end(
                     JSON.stringify({
