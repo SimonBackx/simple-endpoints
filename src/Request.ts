@@ -73,6 +73,7 @@ export class Request {
             host: host,
             query: parsedUrl.query,
             body: body,
+            headers: req.headers,
         });
     }
 }
