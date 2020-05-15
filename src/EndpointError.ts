@@ -1,7 +1,7 @@
-import { Data } from "@simonbackx/simple-encoding";
+import { Data, Encodeable } from "@simonbackx/simple-encoding";
 
 // Error that is caused by a client and should be reported to the client
-export class EndpointError extends Error {
+export class EndpointError extends Error implements Encodeable {
     id: string;
     code: string;
     message: string;
@@ -38,6 +38,10 @@ export class EndpointError extends Error {
      * Required to override the default toJSON behaviour of Error
      */
     toJSON() {
+        return this.encode();
+    }
+
+    encode() {
         return {
             id: this.id,
             code: this.code,

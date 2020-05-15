@@ -1,9 +1,9 @@
-import { Data } from "@simonbackx/simple-encoding";
+import { Data, Encodeable } from "@simonbackx/simple-encoding";
 
 import { EndpointError } from "./EndpointError";
 
 // Error that is caused by a client and should be reported to the client
-export class EndpointErrors extends Error {
+export class EndpointErrors extends Error implements Encodeable {
     errors: EndpointError[];
 
     constructor(...errors: EndpointError[]) {
@@ -49,8 +49,12 @@ export class EndpointErrors extends Error {
      * Required to override the default toJSON behaviour of Error
      */
     toJSON() {
+        return this.encode();
+    }
+
+    encode() {
         return {
-            errors: this.errors,
+            errors: this.errors.map((e) => e.encode()),
         };
     }
 
