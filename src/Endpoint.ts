@@ -7,7 +7,7 @@ import { EndpointErrors } from "./EndpointErrors";
 import { Request } from "./Request";
 import { Response } from "./Response";
 
-export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends Encodeable | undefined> {
+export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends Encodeable | Encodeable[] | undefined> {
     protected queryDecoder: Decoder<Query> | undefined;
     protected bodyDecoder: Decoder<RequestBody> | undefined;
 
@@ -43,7 +43,13 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
 
             // Check if encoding works (ignoring the response)
             if (response.body !== undefined) {
-                response.body.encode();
+                if (Array.isArray(response.body)) {
+                    for (const el of response.body) {
+                        el.encode();
+                    }
+                } else {
+                    response.body.encode();
+                }
             }
 
             return response;
