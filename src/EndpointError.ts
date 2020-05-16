@@ -41,7 +41,7 @@ export class EndpointError extends Error implements Encodeable {
         return this.encode();
     }
 
-    encode() {
+    encode(version?: number) {
         return {
             id: this.id,
             code: this.code,

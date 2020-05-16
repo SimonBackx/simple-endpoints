@@ -52,9 +52,9 @@ export class EndpointErrors extends Error implements Encodeable {
         return this.encode();
     }
 
-    encode() {
+    encode(version?: number) {
         return {
-            errors: this.errors.map((e) => e.encode()),
+            errors: this.errors.map((e) => e.encode(version)),
         };
     }
 
