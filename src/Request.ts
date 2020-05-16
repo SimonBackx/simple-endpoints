@@ -1,5 +1,6 @@
 import http from "http";
 import urlParser from "url";
+import { EndpointError } from "./EndpointError";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "OPTIONS";
 export class Request {
@@ -30,6 +31,26 @@ export class Request {
             body: Promise.resolve(JSON.stringify(body) || ""),
             query: parsedUrl.query,
         });
+    }
+
+    /**
+     * Return the number in the X-Version header or throw if invalid
+     */
+    getVersion(): number | undefined {
+        // Check struct version in headers
+        let version: number | undefined;
+
+        if (this.headers["x-version"] && !Array.isArray(this.headers["x-version"])) {
+            version = Number.parseInt(this.headers["x-version"]);
+            if (isNaN(version)) {
+                throw new EndpointError({
+                    code: "invalid_header",
+                    message: "The X-Version header should contain a valid integer",
+                    statusCode: 400,
+                });
+            }
+        }
+        return version;
     }
 
     static fromHttp(req: http.IncomingMessage): Request {

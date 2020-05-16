@@ -43,12 +43,13 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
 
             // Check if encoding works (ignoring the response)
             if (response.body !== undefined) {
+                const version = request.getVersion();
                 if (Array.isArray(response.body)) {
                     for (const el of response.body) {
-                        el.encode();
+                        el.encode(version);
                     }
                 } else {
-                    response.body.encode();
+                    response.body.encode(version);
                 }
             }
 
@@ -63,7 +64,8 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             if (!params) {
                 throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
             }
-            return new EncodedResponse(await this.getResponse(request, params));
+            const version = request.getVersion();
+            return new EncodedResponse(await this.getResponse(request, params), version);
         }
         return null;
     }

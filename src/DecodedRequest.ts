@@ -1,7 +1,8 @@
-import { Decoder, ObjectData } from '@simonbackx/simple-encoding';
+import { Decoder, ObjectData } from "@simonbackx/simple-encoding";
 import http from "http";
 
-import { HttpMethod,Request } from "./Request";
+import { HttpMethod, Request } from "./Request";
+import { EndpointError } from "./EndpointError";
 
 export class DecodedRequest<Params, Query, Body> {
     method: HttpMethod;
@@ -24,9 +25,10 @@ export class DecodedRequest<Params, Query, Body> {
         r.host = request.host;
         r.headers = request.headers;
 
-        const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query)) : undefined;
-        const body =
-            bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body))) : undefined;
+        // Check struct version in headers
+        const version = request.getVersion();
+        const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, "", version)) : undefined;
+        const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), "", version)) : undefined;
 
         r.params = params;
         r.query = query as Query;
