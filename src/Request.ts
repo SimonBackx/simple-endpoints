@@ -7,18 +7,59 @@ export class Request {
     method: HttpMethod;
     url: string;
     host: string;
-    body: Promise<string>;
+    request?: http.IncomingMessage;
+    bodyPromise?: Promise<string>;
+
+    get body(): Promise<string> {
+        if (!this.bodyPromise) {
+            if (!this.request) {
+                throw new Error("Expected a body promise or a request");
+            }
+            const req = this.request;
+            this.bodyPromise = new Promise<string>((resolve, reject) => {
+                const chunks: any[] = [];
+                let gotError = false;
+
+                // we can access HTTP headers
+                req.on("data", (chunk) => {
+                    chunks.push(chunk);
+                });
+                req.on("error", (err) => {
+                    gotError = true;
+                    reject(err);
+                });
+
+                req.on("end", () => {
+                    if (gotError) {
+                        return;
+                    }
+                    const body = Buffer.concat(chunks).toString();
+                    resolve(body);
+                });
+            });
+        }
+        return this.bodyPromise;
+    }
 
     headers: http.IncomingHttpHeaders;
     query: {} = {};
 
-    constructor(req: { method: HttpMethod; url: string; host: string; headers?: http.IncomingHttpHeaders; body?: Promise<string>; query?: {} }) {
+    constructor(req: {
+        method: HttpMethod;
+        url: string;
+        host: string;
+        headers?: http.IncomingHttpHeaders;
+        body?: Promise<string>;
+        request?: http.IncomingMessage;
+        query?: {};
+    }) {
         this.method = req.method;
         this.url = req.url;
         this.host = req.host;
         this.headers = req.headers ?? {};
-        this.body = req.body ?? Promise.resolve("");
+        this.bodyPromise = req.body;
         this.query = req.query ?? {};
+        this.request = req.request;
     }
 
     static buildJson(method: HttpMethod, url: string, host?: string, body?: any): Request {
@@ -57,27 +98,6 @@ export class Request {
         if (!req.url) {
             throw new Error("Something went wrong");
         }
-        const body = new Promise<string>((resolve, reject) => {
-            const chunks: any[] = [];
-            let gotError = false;
-
-            // we can access HTTP headers
-            req.on("data", (chunk) => {
-                chunks.push(chunk);
-            });
-            req.on("error", (err) => {
-                gotError = true;
-                reject(err);
-            });
-
-            req.on("end", () => {
-                if (gotError) {
-                    return;
-                }
-                const body = Buffer.concat(chunks).toString();
-                resolve(body);
-            });
-        });
 
         const parsedUrl = urlParser.parse(req.url, true);
         let host = req.headers.host ?? "";
@@ -93,7 +113,7 @@ export class Request {
             url: parsedUrl.pathname ?? "",
             host: host,
             query: parsedUrl.query,
-            body: body,
+            request: req,
             headers: req.headers,
         });
     }

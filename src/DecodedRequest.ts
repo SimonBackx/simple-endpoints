@@ -13,6 +13,11 @@ export class DecodedRequest<Params, Query, Body> {
     body: Body;
     query: Query;
 
+    /**
+     * Reference to not yet decoded request (usefull for uploads and special request bodies)
+     */
+    request: Request;
+
     static async fromRequest<Params, Query, Body>(
         request: Request,
         params: Params,
@@ -24,6 +29,7 @@ export class DecodedRequest<Params, Query, Body> {
         r.url = request.url;
         r.host = request.host;
         r.headers = request.headers;
+        r.request = request;
 
         // Check struct version in headers
         const version = request.getVersion();
