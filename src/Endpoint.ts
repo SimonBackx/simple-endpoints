@@ -27,7 +27,6 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             }
             throw e;
         }
-        console.log("Endpoint handling started");
         return await this.handle(decodedRequest);
     }
 
@@ -46,10 +45,10 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
                 const version = request.getVersion();
                 if (Array.isArray(response.body)) {
                     for (const el of response.body) {
-                        el.encode(version);
+                        el.encode({ version });
                     }
                 } else {
-                    response.body.encode(version);
+                    response.body.encode({ version });
                 }
             }
 

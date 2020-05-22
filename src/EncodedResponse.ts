@@ -9,7 +9,7 @@ export class EncodedResponse {
     headers: http.OutgoingHttpHeaders = {};
     body: any;
 
-    constructor(response: Response<Encodeable | Encodeable[] | undefined>, version?: number) {
+    constructor(response: Response<Encodeable | Encodeable[] | undefined>, version: number) {
         this.status = response.status;
         this.headers = response.headers;
 
@@ -18,9 +18,9 @@ export class EncodedResponse {
                 this.headers["Content-Type"] = "application/json";
             }
             if (Array.isArray(response.body)) {
-                this.body = JSON.stringify(response.body.map((e) => e.encode(version)));
+                this.body = JSON.stringify(response.body.map((e) => e.encode({ version })));
             } else {
-                this.body = JSON.stringify(response.body.encode(version));
+                this.body = JSON.stringify(response.body.encode({ version }));
             }
         } else {
             this.body = "";
