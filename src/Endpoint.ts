@@ -63,8 +63,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             if (!params) {
                 throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
             }
-            const version = request.getVersion();
-            return new EncodedResponse(await this.getResponse(request, params), version);
+            return new EncodedResponse(await this.getResponse(request, params), request);
         }
         return null;
     }
