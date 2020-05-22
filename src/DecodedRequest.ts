@@ -30,15 +30,17 @@ export class DecodedRequest<Params, Query, Body> {
         r.host = request.host;
         r.headers = request.headers;
         r.request = request;
-
-        // Check struct version in headers
-        const version = request.getVersion();
-        const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, { version })) : undefined;
-        const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version })) : undefined;
-
         r.params = params;
-        r.query = query as Query;
-        r.body = body as Body;
+
+        if (queryDecoder !== undefined || bodyDecoder !== undefined) {
+            // Only require version if we have to decode something
+            const version = request.getVersion();
+
+            const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, { version })) : undefined;
+            const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version })) : undefined;
+            r.query = query as Query;
+            r.body = body as Body;
+        }
 
         return r;
     }
