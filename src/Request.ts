@@ -1,6 +1,7 @@
 import http from "http";
 import urlParser from "url";
 import { EndpointError } from "./EndpointError";
+import { isEncodeable } from "@simonbackx/simple-encoding";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "OPTIONS";
 export class Request {
@@ -71,6 +72,10 @@ export class Request {
 
     static buildJson(method: HttpMethod, url: string, host?: string, body?: any): Request {
         const parsedUrl = urlParser.parse(url, true);
+
+        if (this.defaultVersion !== undefined && isEncodeable(body)) {
+            body = body.encode({ version: this.defaultVersion });
+        }
 
         return new Request({
             method: method,
