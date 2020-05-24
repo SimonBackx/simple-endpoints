@@ -135,24 +135,24 @@ export class Request {
 
         console.log(req.method + " " + path);
 
-        const urlVersionParts = path.split("/");
+        const urlVersionParts = path.substring(1).split("/");
         let version: number | undefined;
 
-        if (urlVersionParts.length > 1) {
-            const possibleVersion = urlVersionParts[1];
-            if (possibleVersion.substr(0, 1) == "v") {
-                version = parseInt(possibleVersion.substr(1));
+        if (urlVersionParts.length > 0) {
+            const possibleVersion = urlVersionParts[0];
+            if (possibleVersion.substring(0, 1) == "v") {
+                version = parseInt(possibleVersion.substring(1));
                 if (isNaN(version)) {
                     version = undefined;
                 } else {
-                    path = path.substr(possibleVersion.length + 1);
+                    path = path.substring(possibleVersion.length + 1);
                 }
             }
         }
 
         return new Request({
             method: req.method as HttpMethod,
-            url: parsedUrl.pathname ?? "",
+            url: path,
             host: host,
             query: parsedUrl.query,
             request: req,
