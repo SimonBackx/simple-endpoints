@@ -69,6 +69,12 @@ export class Router {
             if (file.includes(".test.")) {
                 continue;
             }
+            if (file.includes(".d.ts.")) {
+                continue;
+            }
+            if (!file.endsWith(".ts") && !file.endsWith(".js")) {
+                continue;
+            }
             const imported = await import(p);
             for (const key in imported) {
                 const element = imported[key];
