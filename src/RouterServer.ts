@@ -8,6 +8,7 @@ import { Router } from "./Router";
 export class RouterServer {
     router: Router;
     server?: http.Server;
+    defaultHeaders: http.OutgoingHttpHeaders = {};
 
     constructor(router: Router) {
         this.router = router;
@@ -28,12 +29,17 @@ export class RouterServer {
 
             if (!response) {
                 const headers = {};
+
+                // Add default headers
+                Object.assign(headers, this.defaultHeaders);
                 if (process.env && process.env.NODE_ENV == "development") {
                     headers["Access-Control-Allow-Origin"] = "*";
                 }
                 res.writeHead(404, headers);
                 res.end("Endpoint not found.");
             } else {
+                Object.assign(response.headers, this.defaultHeaders);
+
                 if (process.env && process.env.NODE_ENV == "development") {
                     response.headers["Access-Control-Allow-Origin"] = "*";
                 }
@@ -47,6 +53,7 @@ export class RouterServer {
                 "Content-Type": "application/json",
                 "Cache-Control": "no-cache",
             };
+            Object.assign(headers, this.defaultHeaders);
             if (process.env && process.env.NODE_ENV == "development") {
                 headers["Access-Control-Allow-Origin"] = "*";
             }
@@ -85,6 +92,8 @@ export class RouterServer {
         }
         console.log("Starting server...");
         this.server = http.createServer(this.requestListener.bind(this));
+        this.server.timeout = 10000;
+
         this.server.listen(port, "0.0.0.0", () => {
             console.log("Server running at http://0.0.0.0:" + port);
         });
