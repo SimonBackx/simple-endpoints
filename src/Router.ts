@@ -69,7 +69,7 @@ export class Router {
             if (file.includes(".test.")) {
                 continue;
             }
-            if (file.includes(".d.ts.")) {
+            if (file.endsWith(".d.ts")) {
                 continue;
             }
             if (!file.endsWith(".ts") && !file.endsWith(".js")) {
