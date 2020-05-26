@@ -15,50 +15,50 @@ export class RouterServer {
     }
 
     async requestListener(req: http.IncomingMessage, res: http.ServerResponse) {
-        let request: Request;
         try {
-            request = Request.fromHttp(req);
-        } catch (e) {
-            console.error(e);
-            res.end();
-            return;
-        }
+            let request: Request;
+            try {
+                request = Request.fromHttp(req);
+            } catch (e) {
+                console.error(e);
+                res.end();
+                return;
+            }
 
-        try {
-            const response = await this.router.run(request);
+            try {
+                const response = await this.router.run(request);
 
-            if (!response) {
-                const headers = {};
+                if (!response) {
+                    const headers = {};
 
-                // Add default headers
+                    // Add default headers
+                    Object.assign(headers, this.defaultHeaders);
+                    if (process.env && process.env.NODE_ENV == "development") {
+                        headers["Access-Control-Allow-Origin"] = "*";
+                    }
+                    res.writeHead(404, headers);
+                    res.end("Endpoint not found.");
+                } else {
+                    Object.assign(response.headers, this.defaultHeaders);
+
+                    if (process.env && process.env.NODE_ENV == "development") {
+                        response.headers["Access-Control-Allow-Origin"] = "*";
+                    }
+
+                    if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
+                    res.writeHead(response.status, response.headers);
+                    res.end(response.body);
+                }
+            } catch (e) {
+                const headers = {
+                    "Content-Type": "application/json",
+                    "Cache-Control": "no-cache",
+                };
                 Object.assign(headers, this.defaultHeaders);
                 if (process.env && process.env.NODE_ENV == "development") {
                     headers["Access-Control-Allow-Origin"] = "*";
                 }
-                res.writeHead(404, headers);
-                res.end("Endpoint not found.");
-            } else {
-                Object.assign(response.headers, this.defaultHeaders);
 
-                if (process.env && process.env.NODE_ENV == "development") {
-                    response.headers["Access-Control-Allow-Origin"] = "*";
-                }
-
-                if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
-                res.writeHead(response.status, response.headers);
-                res.end(response.body);
-            }
-        } catch (e) {
-            const headers = {
-                "Content-Type": "application/json",
-                "Cache-Control": "no-cache",
-            };
-            Object.assign(headers, this.defaultHeaders);
-            if (process.env && process.env.NODE_ENV == "development") {
-                headers["Access-Control-Allow-Origin"] = "*";
-            }
-
-            try {
                 // Todo: implement special errors to send custom status codes
                 if (e instanceof EndpointError) {
                     res.writeHead(e.statusCode ?? 400, headers);
@@ -85,13 +85,12 @@ export class RouterServer {
 
                     console.error(e);
                 }
-            } catch (e2) {
-                console.error(e2);
-                res.writeHead(500);
-                res.end("Internal error");
-            }
 
-            return;
+                return;
+            }
+        } catch (e2) {
+            // Catch errors in error logic
+            console.error(e2);
         }
     }
 
