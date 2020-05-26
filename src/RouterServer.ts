@@ -58,28 +58,37 @@ export class RouterServer {
                 headers["Access-Control-Allow-Origin"] = "*";
             }
 
-            // Todo: implement special errors to send custom status codes
-            if (e instanceof EndpointError) {
-                res.writeHead(e.statusCode ?? 400, headers);
-                res.end(JSON.stringify(new EndpointErrors(e)));
-            } else if (e instanceof EndpointErrors) {
-                res.writeHead(e.statusCode ?? 400, headers);
-                res.end(JSON.stringify(e));
-            } else {
-                res.writeHead(500, headers);
-                // Todo: hide information if not running in development mode
-                res.end(
-                    JSON.stringify({
-                        errors: [
-                            {
-                                code: "internal_error",
-                                message: e.message,
-                            },
-                        ],
-                    })
-                );
+            try {
+                // Todo: implement special errors to send custom status codes
+                if (e instanceof EndpointError) {
+                    res.writeHead(e.statusCode ?? 400, headers);
+                    res.end(JSON.stringify(new EndpointErrors(e)));
+                    console.error(new EndpointErrors(e));
+                } else if (e instanceof EndpointErrors) {
+                    res.writeHead(e.statusCode ?? 400, headers);
+                    res.end(JSON.stringify(e));
 
-                console.error(e);
+                    console.error(JSON.stringify(e));
+                } else {
+                    res.writeHead(500, headers);
+                    // Todo: hide information if not running in development mode
+                    res.end(
+                        JSON.stringify({
+                            errors: [
+                                {
+                                    code: "internal_error",
+                                    message: e.message,
+                                },
+                            ],
+                        })
+                    );
+
+                    console.error(e);
+                }
+            } catch (e2) {
+                console.error(e2);
+                res.writeHead(500);
+                res.end("Internal error");
             }
 
             return;
