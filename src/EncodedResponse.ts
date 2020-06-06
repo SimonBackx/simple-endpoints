@@ -9,7 +9,7 @@ export class EncodedResponse {
     headers: http.OutgoingHttpHeaders = {};
     body: any;
 
-    constructor(response: Response<Encodeable | Encodeable[] | undefined>, request: Request) {
+    constructor(response: Response<Encodeable | Encodeable[] | string | undefined>, request: Request) {
         this.status = response.status;
         this.headers = response.headers;
 
@@ -18,12 +18,26 @@ export class EncodedResponse {
                 this.headers["Content-Type"] = "application/json";
             }
 
-            // Only require version if we have to encode something
-            const version = request.getVersion();
-            if (Array.isArray(response.body)) {
-                this.body = JSON.stringify(response.body.map((e) => e.encode({ version })));
+            if (this.headers["Content-Type"] == "application/json") {
+                // Only require version if we have to encode something
+                const version = request.getVersion();
+                if (typeof response.body == "string") {
+                    console.error("Unexpected string value as body for JSON");
+                    this.body = response.body;
+                } else {
+                    if (Array.isArray(response.body)) {
+                        this.body = JSON.stringify(response.body.map((e) => e.encode({ version })));
+                    } else {
+                        this.body = JSON.stringify(response.body.encode({ version }));
+                    }
+                }
             } else {
-                this.body = JSON.stringify(response.body.encode({ version }));
+                if (typeof response.body == "string") {
+                    this.body = response.body;
+                } else {
+                    console.error("Unexpected non-string value as body");
+                    this.body = "";
+                }
             }
         } else {
             this.body = "";
