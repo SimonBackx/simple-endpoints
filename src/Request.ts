@@ -134,8 +134,8 @@ export class Request {
         host = splitted[0];
 
         let ipAddress = req.socket.remoteAddress;
-        if (req.headers["X-Real-IP"] && typeof req.headers["X-Real-IP"] == "string" && (ipAddress == "127.0.0.1" || ipAddress == "0.0.0.0")) {
-            ipAddress = req.headers["X-Real-IP"];
+        if (req.headers["x-real-ip"] && typeof req.headers["x-real-ip"] == "string" && (ipAddress == "127.0.0.1" || ipAddress == "0.0.0.0")) {
+            ipAddress = req.headers["x-real-ip"];
         }
 
         console.log((ipAddress ?? "unknown") + ": " + req.method + " " + path);
