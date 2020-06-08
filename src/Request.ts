@@ -133,7 +133,12 @@ export class Request {
         const splitted = host.split(":");
         host = splitted[0];
 
-        console.log((req.socket.remoteAddress ?? "unknown") + ": " + req.method + " " + path);
+        let ipAddress = req.socket.remoteAddress;
+        if (req.headers["X-Real-IP"] && typeof req.headers["X-Real-IP"] == "string" && (ipAddress == "127.0.0.1" || ipAddress == "0.0.0.0")) {
+            ipAddress = req.headers["X-Real-IP"];
+        }
+
+        console.log((ipAddress ?? "unknown") + ": " + req.method + " " + path);
 
         const urlVersionParts = path.substring(1).split("/");
         let version: number | undefined;
