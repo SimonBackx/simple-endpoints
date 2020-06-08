@@ -18,7 +18,6 @@ export class CORSPreflightEndpoint extends Endpoint<Params, Query, Body, Respons
     }
 
     async handle(request: DecodedRequest<Params, Query, Body>) {
-        console.log(request.headers);
         // todo: improve this a bit
         const response = new Response(undefined);
         response.headers["Access-Control-Allow-Origin"] = "*";
