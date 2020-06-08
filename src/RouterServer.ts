@@ -9,6 +9,7 @@ export class RouterServer {
     router: Router;
     server?: http.Server;
     defaultHeaders: http.OutgoingHttpHeaders = {};
+    verbose = false;
 
     constructor(router: Router) {
         this.router = router;
@@ -26,6 +27,12 @@ export class RouterServer {
             }
 
             try {
+                if (this.verbose) {
+                    console.log({
+                        headers: request.headers,
+                        body: request.body,
+                    });
+                }
                 const response = await this.router.run(request);
 
                 if (!response) {
@@ -33,21 +40,25 @@ export class RouterServer {
 
                     // Add default headers
                     Object.assign(headers, this.defaultHeaders);
-                    if (process.env && process.env.NODE_ENV == "development") {
-                        headers["Access-Control-Allow-Origin"] = "*";
-                    }
                     res.writeHead(404, headers);
                     res.end("Endpoint not found.");
                 } else {
-                    Object.assign(response.headers, this.defaultHeaders);
-
-                    if (process.env && process.env.NODE_ENV == "development") {
-                        response.headers["Access-Control-Allow-Origin"] = "*";
+                    for (const header in this.defaultHeaders) {
+                        if (this.defaultHeaders.hasOwnProperty(header) && !response.headers.hasOwnProperty(header)) {
+                            response.headers[header] = this.defaultHeaders[header];
+                        }
                     }
 
                     if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
                     res.writeHead(response.status, response.headers);
                     res.end(response.body);
+
+                    if (this.verbose) {
+                        console.log({
+                            headers: response.headers,
+                            body: response.body,
+                        });
+                    }
                 }
             } catch (e) {
                 const headers = {
@@ -55,9 +66,6 @@ export class RouterServer {
                     "Cache-Control": "no-cache",
                 };
                 Object.assign(headers, this.defaultHeaders);
-                if (process.env && process.env.NODE_ENV == "development") {
-                    headers["Access-Control-Allow-Origin"] = "*";
-                }
 
                 // Todo: implement special errors to send custom status codes
                 if (e instanceof EndpointError) {

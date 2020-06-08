@@ -133,7 +133,7 @@ export class Request {
         const splitted = host.split(":");
         host = splitted[0];
 
-        console.log(req.method + " " + path);
+        console.log((req.socket.remoteAddress ?? "unknown") + ": " + req.method + " " + path);
 
         const urlVersionParts = path.substring(1).split("/");
         let version: number | undefined;
