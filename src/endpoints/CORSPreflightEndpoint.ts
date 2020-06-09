@@ -21,7 +21,7 @@ export class CORSPreflightEndpoint extends Endpoint<Params, Query, Body, Respons
         // todo: improve this a bit
         const response = new Response(undefined);
         response.headers["Access-Control-Allow-Origin"] = "*";
-        response.headers["Access-Control-Allow-Methods"] = "*";
+        response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, PATCH, PUT, DELETE";
         response.headers["Access-Control-Allow-Headers"] = request.headers["access-control-request-headers"] ?? "*";
         response.headers["Access-Control-Max-Age"] = "86400"; // Cache 24h
 
