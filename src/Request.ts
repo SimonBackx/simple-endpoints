@@ -126,7 +126,6 @@ export class Request {
 
         const parsedUrl = urlParser.parse(req.url, true);
         let host = req.headers.host ?? "";
-
         let path = parsedUrl.pathname ?? "";
 
         // Remove port
