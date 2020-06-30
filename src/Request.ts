@@ -1,7 +1,8 @@
+import { isEncodeable } from "@simonbackx/simple-encoding";
 import http from "http";
 import urlParser from "url";
+
 import { EndpointError } from "./EndpointError";
-import { isEncodeable } from "@simonbackx/simple-encoding";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "OPTIONS";
 export class Request {
@@ -144,7 +145,7 @@ export class Request {
 
         if (urlVersionParts.length > 0) {
             const possibleVersion = urlVersionParts[0];
-            if (possibleVersion.substring(0, 1) == "v") {
+            if (possibleVersion.startsWith("v")) {
                 version = parseInt(possibleVersion.substring(1));
                 if (isNaN(version)) {
                     version = undefined;

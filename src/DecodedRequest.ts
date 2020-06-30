@@ -1,8 +1,9 @@
 import { Decoder, ObjectData } from "@simonbackx/simple-encoding";
 import http from "http";
+import { parse } from 'querystring';
 
-import { HttpMethod, Request } from "./Request";
 import { EndpointError } from "./EndpointError";
+import { HttpMethod, Request } from "./Request";
 
 export class DecodedRequest<Params, Query, Body> {
     method: HttpMethod;
@@ -37,9 +38,17 @@ export class DecodedRequest<Params, Query, Body> {
             const version = request.getVersion();
 
             const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, { version })) : undefined;
-            const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version })) : undefined;
             r.query = query as Query;
-            r.body = body as Body;
+
+            // Read body type
+            if (r.headers["content-type"]?.toLowerCase() == "application/x-www-form-urlencoded") {
+                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(parse(await request.body), { version })) : undefined;
+                r.body = body as Body;
+            } else {
+                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version })) : undefined;
+                r.body = body as Body;
+            }
+            
         }
 
         return r;

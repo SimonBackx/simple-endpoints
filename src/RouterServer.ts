@@ -33,6 +33,11 @@ export class RouterServer {
                         body: request.body,
                     });
                 }
+
+                req.on("close", () => {
+                    console.log("Client closed the connection")
+                });
+
                 const response = await this.router.run(request);
 
                 if (!response) {
