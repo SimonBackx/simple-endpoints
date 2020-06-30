@@ -40,6 +40,8 @@ export class DecodedRequest<Params, Query, Body> {
             const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, { version })) : undefined;
             r.query = query as Query;
 
+            console.log(r.headers)
+
             // Read body type
             if (r.headers["content-type"]?.toLowerCase() == "application/x-www-form-urlencoded") {
                 const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(parse(await request.body), { version })) : undefined;
