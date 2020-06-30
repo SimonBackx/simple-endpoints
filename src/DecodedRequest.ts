@@ -43,7 +43,7 @@ export class DecodedRequest<Params, Query, Body> {
             console.log(r.headers)
 
             // Read body type
-            if (r.headers["content-type"]?.toLowerCase() == "application/x-www-form-urlencoded") {
+            if (r.headers["content-type"]?.toLowerCase().startsWith("application/x-www-form-urlencoded")) {
                 const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(parse(await request.body), { version })) : undefined;
                 r.body = body as Body;
             } else {
