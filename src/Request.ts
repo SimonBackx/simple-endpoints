@@ -69,6 +69,9 @@ export class Request {
         this.query = req.query ?? {};
         this.request = req.request;
         this.version = req.version;
+
+        // If version is undefined: check the URL
+        this.readVersionFromUrl()
     }
 
     static buildJson(method: HttpMethod, url: string, host?: string, body?: any): Request {
@@ -120,6 +123,35 @@ export class Request {
         return version;
     }
 
+    /**
+     *  Read version from the path if present. Do only call this once since this can fuck up the path if it contains multiple versions for some reason.
+     * E.g. /v1/v2/test -> if you call this once, you'll get version 1 and path /v2/test. Call it again to get version 2 and path /test
+     * */
+    private readVersionFromUrl() {
+        if (this.version) {
+            // Already have a version here!
+            return;
+        }
+
+        const urlVersionParts = this.url.substring(1).split("/");
+        let version: number | undefined;
+
+        if (urlVersionParts.length > 0) {
+            const possibleVersion = urlVersionParts[0];
+            if (possibleVersion.startsWith("v")) {
+                version = parseInt(possibleVersion.substring(1));
+                if (isNaN(version)) {
+                    version = undefined;
+                } else {
+                    this.url = this.url.substring(possibleVersion.length + 1);
+                }
+            }
+        }
+        if (version) {
+            this.version = version
+        }
+    }
+
     static fromHttp(req: http.IncomingMessage): Request {
         if (!req.url) {
             throw new Error("Something went wrong");
@@ -127,7 +159,7 @@ export class Request {
 
         const parsedUrl = urlParser.parse(req.url, true);
         let host = req.headers.host ?? "";
-        let path = parsedUrl.pathname ?? "";
+        const path = parsedUrl.pathname ?? "";
 
         // Remove port
         const splitted = host.split(":");
@@ -140,21 +172,6 @@ export class Request {
 
         console.log((ipAddress ?? "unknown") + ": " + req.method + " " + path);
 
-        const urlVersionParts = path.substring(1).split("/");
-        let version: number | undefined;
-
-        if (urlVersionParts.length > 0) {
-            const possibleVersion = urlVersionParts[0];
-            if (possibleVersion.startsWith("v")) {
-                version = parseInt(possibleVersion.substring(1));
-                if (isNaN(version)) {
-                    version = undefined;
-                } else {
-                    path = path.substring(possibleVersion.length + 1);
-                }
-            }
-        }
-
         return new Request({
             method: req.method as HttpMethod,
             url: path,
@@ -162,7 +179,6 @@ export class Request {
             query: parsedUrl.query,
             request: req,
             headers: req.headers,
-            version: version,
         });
     }
 }
