@@ -1,9 +1,9 @@
 import { Decoder, Encodeable } from "@simonbackx/simple-encoding";
+import { SimpleError } from "@simonbackx/simple-errors";
+import { SimpleErrors } from "@simonbackx/simple-errors";
 
 import { DecodedRequest } from "./DecodedRequest";
 import { EncodedResponse } from "./EncodedResponse";
-import { EndpointError } from "./EndpointError";
-import { EndpointErrors } from "./EndpointErrors";
 import { Request } from "./Request";
 import { Response } from "./Response";
 
@@ -20,10 +20,10 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             decodedRequest = await DecodedRequest.fromRequest(request, params, this.queryDecoder, this.bodyDecoder);
         } catch (e) {
             if (e.code && e.message) {
-                throw new EndpointError(e);
+                throw new SimpleError(e);
             }
             if (e.errors) {
-                throw new EndpointErrors(...e.errors);
+                throw new SimpleErrors(...e.errors);
             }
             throw e;
         }

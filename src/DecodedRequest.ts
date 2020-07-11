@@ -2,7 +2,6 @@ import { Decoder, ObjectData } from "@simonbackx/simple-encoding";
 import http from "http";
 import { parse } from 'querystring';
 
-import { EndpointError } from "./EndpointError";
 import { HttpMethod, Request } from "./Request";
 
 export class DecodedRequest<Params, Query, Body> {

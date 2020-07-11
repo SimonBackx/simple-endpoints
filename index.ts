@@ -5,6 +5,4 @@ export * from "./src/Request";
 export * from "./src/Response";
 export * from "./src/Router";
 export * from "./src/RouterServer";
-export * from "./src/EndpointError";
-export * from "./src/EndpointErrors";
 export * from "./src/endpoints/CORSPreflightEndpoint";

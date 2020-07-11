@@ -1,7 +1,6 @@
+import { isSimpleError, isSimpleErrors,SimpleError, SimpleErrors } from "@simonbackx/simple-errors";
 import http from "http";
 
-import { EndpointError } from "./EndpointError";
-import { EndpointErrors } from "./EndpointErrors";
 import { Request } from "./Request";
 import { Router } from "./Router";
 
@@ -69,11 +68,11 @@ export class RouterServer {
                 Object.assign(headers, this.defaultHeaders);
 
                 // Todo: implement special errors to send custom status codes
-                if (e instanceof EndpointError) {
+                if (isSimpleError(e)) {
                     res.writeHead(e.statusCode ?? 400, headers);
-                    res.end(JSON.stringify(new EndpointErrors(e)));
-                    console.error(new EndpointErrors(e));
-                } else if (e instanceof EndpointErrors) {
+                    res.end(JSON.stringify(new SimpleErrors(e)));
+                    console.error(new SimpleErrors(e));
+                } else if (isSimpleErrors(e)) {
                     res.writeHead(e.statusCode ?? 400, headers);
                     res.end(JSON.stringify(e));
 

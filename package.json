@@ -12,7 +12,8 @@
         "dist"
     ],
     "dependencies": {
-        "@simonbackx/simple-encoding": "^1.8.0"
+        "@simonbackx/simple-encoding": "^1.8.0",
+        "@simonbackx/simple-errors": "^1.0.4"
     },
     "devDependencies": {
         "@types/jest": "^25.1.4",

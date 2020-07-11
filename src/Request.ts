@@ -1,8 +1,7 @@
 import { isEncodeable } from "@simonbackx/simple-encoding";
+import { SimpleError } from "@simonbackx/simple-errors";
 import http from "http";
 import urlParser from "url";
-
-import { EndpointError } from "./EndpointError";
 
 export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "OPTIONS";
 export class Request {
@@ -103,7 +102,7 @@ export class Request {
         if (this.headers["x-version"] && !Array.isArray(this.headers["x-version"])) {
             version = Number.parseInt(this.headers["x-version"]);
             if (isNaN(version)) {
-                throw new EndpointError({
+                throw new SimpleError({
                     code: "invalid_header",
                     message: "The X-Version header should contain a valid integer",
                     statusCode: 400,
@@ -112,7 +111,7 @@ export class Request {
         }
 
         if (version === undefined) {
-            throw new EndpointError({
+            throw new SimpleError({
                 code: "missing_version",
                 message: "Providing a version is required. Use the URL or the X-Version header.",
                 statusCode: 400,
