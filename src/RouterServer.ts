@@ -33,7 +33,7 @@ export class RouterServer {
                     });
                 }
 
-                const response = await this.router.run(request);
+                const response = await this.router.run(request, res);
 
                 if (!response) {
                     const headers = {};
