@@ -1,6 +1,7 @@
 import { Decoder, Encodeable } from "@simonbackx/simple-encoding";
 import { SimpleError } from "@simonbackx/simple-errors";
 import { SimpleErrors } from "@simonbackx/simple-errors";
+import http from "http";
 
 import { DecodedRequest } from "./DecodedRequest";
 import { EncodedResponse } from "./EncodedResponse";
@@ -11,7 +12,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
     protected queryDecoder: Decoder<Query> | undefined;
     protected bodyDecoder: Decoder<RequestBody> | undefined;
 
-    protected abstract doesMatch(request: Request): [true, Params] | [false];
+    protected abstract doesMatch(request: Request, response?: http.ServerResponse): [true, Params] | [false];
     protected abstract handle(request: DecodedRequest<Params, Query, RequestBody>): Promise<Response<ResponseBody>>;
 
     async getResponse(request: Request, params: Params): Promise<Response<ResponseBody>> {
@@ -50,8 +51,8 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         throw new Error("Route is not matching");
     }
 
-    async run(request: Request): Promise<EncodedResponse | null> {
-        const [match, params] = this.doesMatch(request);
+    async run(request: Request, response?: http.ServerResponse): Promise<EncodedResponse | null> {
+        const [match, params] = this.doesMatch(request, response);
         if (match) {
             if (!params) {
                 throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
