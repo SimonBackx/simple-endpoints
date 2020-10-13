@@ -1,8 +1,8 @@
 import { Encodeable } from "@simonbackx/simple-encoding";
 import http from "http";
 
-import { Response } from "./Response";
 import { Request } from "./Request";
+import { Response } from "./Response";
 
 export class EncodedResponse {
     status = 200;
@@ -26,9 +26,17 @@ export class EncodedResponse {
                     this.body = response.body;
                 } else {
                     if (Array.isArray(response.body)) {
-                        this.body = JSON.stringify(response.body.map((e) => e.encode({ version })));
+                        if (process.env.NODE_ENV === "development") {
+                            this.body = JSON.stringify(response.body.map((e) => e.encode({ version })), undefined, 2);
+                        } else {
+                            this.body = JSON.stringify(response.body.map((e) => e.encode({ version })));
+                        }
                     } else {
-                        this.body = JSON.stringify(response.body.encode({ version }));
+                        if (process.env.NODE_ENV === "development") {
+                            this.body = JSON.stringify(response.body.encode({ version }), undefined, 2);
+                        } else {
+                            this.body = JSON.stringify(response.body.encode({ version }));
+                        }
                     }
                 }
             } else {
