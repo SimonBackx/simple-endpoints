@@ -22,7 +22,7 @@ export class EncodedResponse {
                 // Only require version if we have to encode something
                 const version = request.getVersion();
                 if (typeof response.body == "string") {
-                    console.error("Unexpected string value as body for JSON");
+                    console.warn("We got a string value as body for JSON");
                     this.body = response.body;
                 } else {
                     if (Array.isArray(response.body)) {
