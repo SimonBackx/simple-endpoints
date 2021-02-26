@@ -18,7 +18,6 @@ export class RouterServer {
     httpsOptions: HttpsOptions | null;
 
     constructor(router: Router, option: HttpsOptions | null = null) {
-        console.log('ROUTER SERVER CONSTRUCTOR2', option);
         this.router = router;
         this.httpsOptions = option;
     }
@@ -123,7 +122,7 @@ export class RouterServer {
         this.server.timeout = 10000;
 
         this.server.listen(port, "0.0.0.0", () => {
-            console.log("Server running at http://0.0.0.0:" + port);
+            console.log("Server running at https://0.0.0.0:" + port);
         });
     }
 
