@@ -1,17 +1,25 @@
-import { isSimpleError, isSimpleErrors,SimpleError, SimpleErrors } from "@simonbackx/simple-errors";
+import { isSimpleError, isSimpleErrors, SimpleError, SimpleErrors } from "@simonbackx/simple-errors";
 import http from "http";
+import https from "https";
 
 import { Request } from "./Request";
 import { Router } from "./Router";
+
+type HttpsOptions = {
+    key: Buffer;
+    cert: Buffer;
+}
 
 export class RouterServer {
     router: Router;
     server?: http.Server;
     defaultHeaders: http.OutgoingHttpHeaders = {};
     verbose = false;
+    httpsOptions: HttpsOptions | null;
 
-    constructor(router: Router) {
+    constructor(router: Router, option: HttpsOptions | null = null) {
         this.router = router;
+        this.httpsOptions = option;
     }
 
     async requestListener(req: http.IncomingMessage, res: http.ServerResponse) {
@@ -106,12 +114,15 @@ export class RouterServer {
         if (this.server) {
             throw new Error("Already listening.");
         }
-        console.log("Starting server...");
-        this.server = http.createServer(this.requestListener.bind(this));
+        if (this.httpsOptions) {
+            this.server = https.createServer(this.httpsOptions, this.requestListener.bind(this));
+        } else {
+            this.server = http.createServer(this.requestListener.bind(this));
+        }
         this.server.timeout = 10000;
 
         this.server.listen(port, "0.0.0.0", () => {
-            console.log("Server running at http://0.0.0.0:" + port);
+            console.log(`Server running at ${this.httpsOptions ? 'https' : 'http'}://0.0.0.0:${port}`);
         });
     }
 
