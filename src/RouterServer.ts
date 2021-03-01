@@ -1,4 +1,4 @@
-import { isSimpleError, isSimpleErrors, SimpleError, SimpleErrors } from "@simonbackx/simple-errors";
+import { isSimpleError, isSimpleErrors, SimpleErrors } from "@simonbackx/simple-errors";
 import http from "http";
 import https from "https";
 
