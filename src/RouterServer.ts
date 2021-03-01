@@ -122,7 +122,7 @@ export class RouterServer {
         this.server.timeout = 10000;
 
         this.server.listen(port, "0.0.0.0", () => {
-            console.log("Server running at https://0.0.0.0:" + port);
+            console.log(`Server running at ${this.httpsOptions ? 'https' : 'http'}://0.0.0.0:${port}`);
         });
     }
 
