@@ -43,7 +43,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
 
             // Check if encoding works (ignoring the response)
             if (response.body !== undefined) {
-                new EncodedResponse(response, request);
+                EncodedResponse.encode(response, request);
             }
 
             return response;
@@ -57,7 +57,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             if (!params) {
                 throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
             }
-            return new EncodedResponse(await this.getResponse(request, params), request);
+            return EncodedResponse.encode(await this.getResponse(request, params), request);
         }
         return null;
     }

@@ -6,3 +6,4 @@ export * from "./src/Response";
 export * from "./src/Router";
 export * from "./src/RouterServer";
 export * from "./src/endpoints/CORSPreflightEndpoint";
+export * from "./src/ResponseMiddleware";

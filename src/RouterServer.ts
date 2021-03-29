@@ -2,7 +2,9 @@ import { isSimpleError, isSimpleErrors, SimpleErrors } from "@simonbackx/simple-
 import http from "http";
 import https from "https";
 
+import { EncodedResponse } from "./EncodedResponse";
 import { Request } from "./Request";
+import { ResponseMiddleware } from "./ResponseMiddleware";
 import { Router } from "./Router";
 
 type HttpsOptions = {
@@ -17,9 +19,15 @@ export class RouterServer {
     verbose = false;
     httpsOptions: HttpsOptions | null;
 
+    responseMiddlewares: ResponseMiddleware[] = []
+
     constructor(router: Router, option: HttpsOptions | null = null) {
         this.router = router;
         this.httpsOptions = option;
+    }
+
+    addResponseMiddleware(middleware: ResponseMiddleware) {
+        this.responseMiddlewares.push(middleware)
     }
 
     async requestListener(req: http.IncomingMessage, res: http.ServerResponse) {
@@ -41,32 +49,38 @@ export class RouterServer {
                     });
                 }
 
-                const response = await this.router.run(request, res);
+                let response = await this.router.run(request, res);
 
                 if (!response) {
-                    const headers = {};
+                    // Create a new response
+                    response = new EncodedResponse(404, {}, "Endpoint not found.")
+                }
 
-                    // Add default headers
-                    Object.assign(headers, this.defaultHeaders);
-                    res.writeHead(404, headers);
-                    res.end("Endpoint not found.");
-                } else {
-                    for (const header in this.defaultHeaders) {
-                        if (this.defaultHeaders.hasOwnProperty(header) && !response.headers.hasOwnProperty(header)) {
-                            response.headers[header] = this.defaultHeaders[header];
-                        }
+                // Add default headers
+                for (const header in this.defaultHeaders) {
+                    if (this.defaultHeaders.hasOwnProperty(header) && !response.headers.hasOwnProperty(header)) {
+                        response.headers[header] = this.defaultHeaders[header];
                     }
+                }
 
-                    if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
-                    res.writeHead(response.status, response.headers);
-                    res.end(response.body);
+                // Add cache control no cache
+                if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
 
-                    if (this.verbose) {
-                        console.log({
-                            headers: response.headers,
-                            body: response.body,
-                        });
-                    }
+                // Process response middlewares
+                for (const middleware of this.responseMiddlewares) {
+                    middleware.handleResponse(request, response)
+                }
+                
+                // Write to client
+                res.writeHead(response.status, response.headers);
+                res.end(response.body);
+
+                // Write to logs
+                if (this.verbose) {
+                    console.log({
+                        headers: response.headers,
+                        body: response.body,
+                    });
                 }
             } catch (e) {
                 const headers = {
@@ -75,32 +89,36 @@ export class RouterServer {
                 };
                 Object.assign(headers, this.defaultHeaders);
 
+                let response: EncodedResponse
+
                 // Todo: implement special errors to send custom status codes
                 if (isSimpleError(e)) {
-                    res.writeHead(e.statusCode ?? 400, headers);
-                    res.end(JSON.stringify(new SimpleErrors(e)));
+                    response = new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(new SimpleErrors(e)))
                     console.error(new SimpleErrors(e));
                 } else if (isSimpleErrors(e)) {
-                    res.writeHead(e.statusCode ?? 400, headers);
-                    res.end(JSON.stringify(e));
-
+                    response = new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(e))
                     console.error(JSON.stringify(e));
                 } else {
-                    res.writeHead(500, headers);
-                    // Todo: hide information if not running in development mode
-                    res.end(
-                        JSON.stringify({
-                            errors: [
-                                {
-                                    code: "internal_error",
-                                    message: e.message,
-                                },
-                            ],
-                        })
-                    );
+                    response = new EncodedResponse(500, headers, JSON.stringify({
+                        errors: [
+                            {
+                                code: "internal_error",
+                                message: e.message,
+                            },
+                        ],
+                    }))
 
                     console.error(e);
                 }
+                
+                // Process response middlewares
+                for (const middleware of this.responseMiddlewares) {
+                    middleware.handleResponse(request, response)
+                }
+
+                // Write to client
+                res.writeHead(response.status, response.headers);
+                res.end(response.body);
 
                 return;
             }
