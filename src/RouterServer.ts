@@ -1,4 +1,4 @@
-import { isSimpleError, isSimpleErrors, SimpleErrors } from "@simonbackx/simple-errors";
+import { isSimpleError, isSimpleErrors, SimpleError, SimpleErrors } from "@simonbackx/simple-errors";
 import http from "http";
 import https from "https";
 
@@ -99,16 +99,11 @@ export class RouterServer {
                     response = new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(e))
                     console.error(JSON.stringify(e));
                 } else {
-                    response = new EncodedResponse(500, headers, JSON.stringify({
-                        errors: [
-                            {
-                                code: "internal_error",
-                                message: e.message,
-                            },
-                        ],
-                    }))
-
                     console.error(e);
+                    response = new EncodedResponse(500, headers, JSON.stringify(new SimpleErrors(new SimpleError({
+                        code: "internal_error",
+                        message: e.message
+                    }))))
                 }
                 
                 // Process response middlewares
