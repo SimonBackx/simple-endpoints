@@ -1,4 +1,4 @@
-import { isEncodeable } from "@simonbackx/simple-encoding";
+import { encodeObject } from "@simonbackx/simple-encoding";
 import { SimpleError } from "@simonbackx/simple-errors";
 import http from "http";
 import urlParser from "url";
@@ -76,8 +76,8 @@ export class Request {
     static buildJson(method: HttpMethod, url: string, host?: string, body?: any): Request {
         const parsedUrl = urlParser.parse(url, true);
 
-        if (this.defaultVersion !== undefined && isEncodeable(body)) {
-            body = body.encode({ version: this.defaultVersion });
+        if (this.defaultVersion !== undefined) {
+            body = encodeObject(body, { version: this.defaultVersion });
         }
 
         return new Request({
