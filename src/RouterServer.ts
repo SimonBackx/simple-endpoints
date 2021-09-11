@@ -139,11 +139,12 @@ export class RouterServer {
         });
     }
 
-    async close(): Promise<Error | undefined> {
-        console.log("Stoppping server...");
+    async close(): Promise<void> {
+        console.log(`Stoppping ${this.httpsOptions ? 'HTTPS' : 'HTTP'} server...`);
         return new Promise((resolve, reject) => {
             if (!this.server) {
-                throw new Error("Already stopped.");
+                reject(new Error("Already stopped."));
+                return
             }
             this.server.close((err) => {
                 if (err) {
