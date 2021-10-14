@@ -4,6 +4,7 @@ import https from "https";
 
 import { EncodedResponse } from "./EncodedResponse";
 import { Request } from "./Request";
+import { RequestMiddleware } from "./RequestMiddleware";
 import { ResponseMiddleware } from "./ResponseMiddleware";
 import { Router } from "./Router";
 
@@ -19,6 +20,7 @@ export class RouterServer {
     verbose = false;
     httpsOptions: HttpsOptions | null;
 
+    requestMiddlewares: RequestMiddleware[] = []
     responseMiddlewares: ResponseMiddleware[] = []
 
     constructor(router: Router, option: HttpsOptions | null = null) {
@@ -28,6 +30,10 @@ export class RouterServer {
 
     addResponseMiddleware(middleware: ResponseMiddleware) {
         this.responseMiddlewares.push(middleware)
+    }
+
+    addRequestMiddleware(middleware: RequestMiddleware) {
+        this.requestMiddlewares.push(middleware)
     }
 
     async requestListener(req: http.IncomingMessage, res: http.ServerResponse) {
@@ -47,6 +53,11 @@ export class RouterServer {
                         headers: request.headers,
                         body: request.body,
                     });
+                }
+
+                // Process response middlewares
+                for (const middleware of this.requestMiddlewares) {
+                    middleware.handleRequest(request)
                 }
 
                 let response = await this.router.run(request, res);
