@@ -164,13 +164,6 @@ export class Request {
         const splitted = host.split(":");
         host = splitted[0];
 
-        let ipAddress = req.socket.remoteAddress;
-        if (req.headers["x-real-ip"] && typeof req.headers["x-real-ip"] == "string" && (ipAddress == "127.0.0.1" || ipAddress == "0.0.0.0")) {
-            ipAddress = req.headers["x-real-ip"];
-        }
-
-        console.log((ipAddress ?? "unknown") + ": " + req.method + " " + path);
-
         return new Request({
             method: req.method as HttpMethod,
             url: path,
