@@ -105,7 +105,7 @@ export class RouterServer {
                 // Todo: implement special errors to send custom status codes
                 if (isSimpleError(e)) {
                     response = new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(new SimpleErrors(e)))
-                    console.error(new SimpleErrors(e));
+                    console.error(JSON.stringify(new SimpleErrors(e)));
                 } else if (isSimpleErrors(e)) {
                     response = new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(e))
                     console.error(JSON.stringify(e));
@@ -119,7 +119,7 @@ export class RouterServer {
                 
                 // Process response middlewares
                 for (const middleware of this.responseMiddlewares) {
-                    middleware.handleResponse(request, response)
+                    middleware.handleResponse(request, response, e)
                 }
 
                 // Write to client
