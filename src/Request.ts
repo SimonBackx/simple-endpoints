@@ -89,6 +89,18 @@ export class Request {
         });
     }
 
+    getIP(): string {
+        let ipAddress = this.request?.socket.remoteAddress;
+        if (this.headers["x-real-ip"] && typeof this.headers["x-real-ip"] == "string" && (ipAddress == "127.0.0.1" || ipAddress == "0.0.0.0")) {
+            ipAddress = this.headers["x-real-ip"];
+        }
+        if (!ipAddress) {
+            ipAddress = '?';
+        }
+
+        return ipAddress.split(":", 2)[0]
+    }
+
     /**
      * Return the number in the X-Version header or throw if invalid
      */
