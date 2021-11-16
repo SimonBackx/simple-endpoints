@@ -27,6 +27,7 @@ function isEndpointType(endpoint: any): endpoint is EndpointConstructor {
 
 export class Router {
     endpoints: GenericEndpoint[] = [];
+    verbose = false
 
     async loadAllEndpoints(folder: string) {
         const parts = folder.split("/");
@@ -54,7 +55,9 @@ export class Router {
 
         for (const f of folderQueue) {
             if (await directoryExists(f)) {
-                console.log("Endpoints from " + f);
+                if (this.verbose) {
+                    console.log("Endpoints from " + f);
+                }
                 await this.loadEndpoints(f);
             }
         }
@@ -80,7 +83,9 @@ export class Router {
             for (const key in imported) {
                 const element = imported[key];
                 if (isEndpointType(element)) {
-                    console.log("Loaded " + key);
+                    if (this.verbose) {
+                        console.log("Loaded " + key);
+                    }
                     this.endpoints.push(new element());
                 }
             }
