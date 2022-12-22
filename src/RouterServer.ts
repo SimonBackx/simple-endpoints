@@ -60,7 +60,17 @@ export class RouterServer {
                     middleware.handleRequest(request)
                 }
 
-                let response = await this.router.run(request, res);
+                let run = async () => {
+                    return await this.router.run(request, res);
+                }
+
+                for (const middleware of this.requestMiddlewares) {
+                    const currentRun = run;
+                    const wrapRun = middleware.wrapRun
+                    run = wrapRun ? (async () => wrapRun(currentRun, request)) : currentRun;
+                }
+
+                let response = await run();
 
                 if (!response) {
                     // Create a new response
