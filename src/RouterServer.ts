@@ -118,9 +118,10 @@ export class RouterServer {
                 } else if (isSimpleErrors(e)) {
                     response = new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(e))
                 } else {
+                    console.error(e);
                     response = new EncodedResponse(500, headers, JSON.stringify(new SimpleErrors(new SimpleError({
                         code: "internal_error",
-                        message: e.message
+                        message: "An internal error occurred",
                     }))))
                 }
                 
