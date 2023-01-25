@@ -15,7 +15,7 @@ export class EncodedResponse {
         this.body = body
     }
 
-    static encode(response: Response<Encodeable | Encodeable[] | string | undefined>, request: Request): EncodedResponse {
+    static encode(response: Response<Encodeable | Encodeable[] | string | Buffer | undefined>, request: Request): EncodedResponse {
         const encoded = new EncodedResponse(response.status, response.headers, undefined)
 
         if (response.body !== undefined) {
@@ -26,8 +26,8 @@ export class EncodedResponse {
             if (encoded.headers["Content-Type"] == "application/json") {
                 // Only require version if we have to encode something
                 const version = request.getVersion();
-                if (typeof response.body == "string") {
-                    console.warn("We got a string value as body for JSON");
+                if (typeof response.body == "string" || response.body instanceof Buffer) {
+                    console.warn("We got a string/Buffer value as body for JSON");
                     encoded.body = response.body;
                 } else {
                     if (Array.isArray(response.body)) {
@@ -45,7 +45,7 @@ export class EncodedResponse {
                     }
                 }
             } else {
-                if (typeof response.body == "string") {
+                if (typeof response.body == "string" || response.body instanceof Buffer) {
                     encoded.body = response.body;
                 } else {
                     console.error("Unexpected non-string value as body");

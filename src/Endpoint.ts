@@ -8,7 +8,7 @@ import { EncodedResponse } from "./EncodedResponse";
 import { Request } from "./Request";
 import { Response } from "./Response";
 
-export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends Encodeable | Encodeable[] | string | undefined> {
+export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends Encodeable | Encodeable[] | string | Buffer | undefined> {
     protected queryDecoder: Decoder<Query> | undefined;
     protected bodyDecoder: Decoder<RequestBody> | undefined;
 
