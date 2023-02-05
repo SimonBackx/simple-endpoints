@@ -19,11 +19,11 @@ export class EncodedResponse {
         const encoded = new EncodedResponse(response.status, response.headers, undefined)
 
         if (response.body !== undefined) {
-            if (!encoded.headers["Content-Type"]) {
-                encoded.headers["Content-Type"] = "application/json";
+            if (!encoded.headers["Content-Type"] && !encoded.headers["content-type"]) {
+                encoded.headers["content-type"] = "application/json";
             }
 
-            if (encoded.headers["Content-Type"] == "application/json") {
+            if (encoded.headers["Content-Type"] == "application/json" || encoded.headers["content-type"] == "application/json") {
                 // Only require version if we have to encode something
                 const version = request.getVersion();
                 if (typeof response.body == "string" || response.body instanceof Buffer) {
