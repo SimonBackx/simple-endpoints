@@ -42,9 +42,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             const response = await this.getResponse(request, params);
 
             // Check if encoding works (ignoring the response)
-            if (response.body !== undefined) {
-                EncodedResponse.encode(response, request);
-            }
+            EncodedResponse.encode(response, request);
 
             return response;
         }

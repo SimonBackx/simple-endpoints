@@ -8,3 +8,4 @@ export * from "./src/RouterServer";
 export * from "./src/endpoints/CORSPreflightEndpoint";
 export * from "./src/ResponseMiddleware";
 export * from "./src/RequestMiddleware";
+export * from "./src/TestServer";
