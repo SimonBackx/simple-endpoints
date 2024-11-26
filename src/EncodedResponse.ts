@@ -17,7 +17,7 @@ export class EncodedResponse {
         this.body = body
     }
 
-    static encode(response: Response<Encodeable | Encodeable[] | string | Buffer | Readable | undefined>, request: Request): EncodedResponse {
+    static encode(response: Response<Encodeable | Encodeable[] | string | Buffer | Uint8Array | Readable | undefined>, request: Request): EncodedResponse {
         const encoded = new EncodedResponse(response.status, response.headers, undefined)
 
         if (response.body !== undefined) {
@@ -28,7 +28,7 @@ export class EncodedResponse {
             if (encoded.headers["Content-Type"] == "application/json" || encoded.headers["content-type"] == "application/json") {
                 // Only require version if we have to encode something
                 const version = request.getVersion();
-                if (typeof response.body == "string" || response.body instanceof Buffer || isReadableStream(response.body)) {
+                if (typeof response.body == "string" || response.body instanceof Uint8Array || response.body instanceof Buffer || isReadableStream(response.body)) {
                     console.warn("We got a string/Buffer value as body for JSON");
                     encoded.body = response.body;
                 } else {
@@ -47,7 +47,7 @@ export class EncodedResponse {
                     }
                 }
             } else {
-                if (typeof response.body == "string" || response.body instanceof Buffer || isReadableStream(response.body)) {
+                if (typeof response.body == "string" || response.body instanceof Uint8Array || response.body instanceof Buffer || isReadableStream(response.body)) {
                     encoded.body = response.body;
                 } else {
                     console.error("Unexpected non-string value as body");
