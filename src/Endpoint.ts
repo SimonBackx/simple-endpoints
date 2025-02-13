@@ -1,13 +1,13 @@
-import { Decoder, Encodeable } from "@simonbackx/simple-encoding";
-import { SimpleError } from "@simonbackx/simple-errors";
-import { SimpleErrors } from "@simonbackx/simple-errors";
-import http from "http";
-import { Readable } from "node:stream";
+import { Decoder, Encodeable } from '@simonbackx/simple-encoding';
+import { SimpleError } from '@simonbackx/simple-errors';
+import { SimpleErrors } from '@simonbackx/simple-errors';
+import http from 'http';
+import { Readable } from 'node:stream';
 
-import { DecodedRequest } from "./DecodedRequest";
-import { EncodedResponse } from "./EncodedResponse";
-import { Request } from "./Request";
-import { Response } from "./Response";
+import { DecodedRequest } from './DecodedRequest';
+import { EncodedResponse } from './EncodedResponse';
+import { Request } from './Request';
+import { Response } from './Response';
 
 export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends Encodeable | Encodeable[] | string | Buffer | Uint8Array | Readable | undefined> {
     protected queryDecoder: Decoder<Query> | undefined;
@@ -20,7 +20,8 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         let decodedRequest: DecodedRequest<Params, Query, RequestBody>;
         try {
             decodedRequest = await DecodedRequest.fromRequest(request, params, this.queryDecoder, this.bodyDecoder);
-        } catch (e) {
+        }
+        catch (e) {
             if (e.code && e.message) {
                 throw new SimpleError(e);
             }
@@ -47,7 +48,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
 
             return response;
         }
-        throw new Error("Route is not matching");
+        throw new Error('Route is not matching');
     }
 
     async run(request: Request, response?: http.ServerResponse): Promise<Response<ResponseBody> | null> {
@@ -64,10 +65,10 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
     static parseParameters<Keys extends string>(
         url: string,
         template: string,
-        params: Record<Keys, NumberConstructor | StringConstructor>
+        params: Record<Keys, NumberConstructor | StringConstructor>,
     ): Record<Keys, number | string> | undefined {
-        const parts = url.split("/");
-        const templateParts = template.split("/");
+        const parts = url.split('/');
+        const templateParts = template.split('/');
 
         if (parts.length != templateParts.length) {
             // No match
@@ -86,7 +87,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
                     // Found a param
                     resultParams[param] = params[param](part);
 
-                    if (typeof resultParams[param] === "number") {
+                    if (typeof resultParams[param] === 'number') {
                         // Force integers
                         if (!Number.isInteger(resultParams[param])) {
                             return;
