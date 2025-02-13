@@ -2,7 +2,7 @@ import { Encodeable } from "@simonbackx/simple-encoding";
 import http from "http";
 
 import { Request } from "./Request";
-import { Response } from "./Response";
+import { Response, SupportedResponseBodyTypes } from "./Response";
 import { Readable } from "node:stream";
 import { isReadableStream } from "./isReadableStream";
 
@@ -17,7 +17,7 @@ export class EncodedResponse {
         this.body = body
     }
 
-    static encode(response: Response<Encodeable | Encodeable[] | string | Buffer | Uint8Array | Readable | undefined>, request: Request): EncodedResponse {
+    static encode(response: Response<SupportedResponseBodyTypes>, request: Request): EncodedResponse {
         const encoded = new EncodedResponse(response.status, response.headers, undefined)
 
         if (response.body !== undefined) {

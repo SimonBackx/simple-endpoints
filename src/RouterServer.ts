@@ -8,6 +8,8 @@ import { RequestMiddleware } from "./RequestMiddleware";
 import { ResponseMiddleware } from "./ResponseMiddleware";
 import { Router } from "./Router";
 import { isReadableStream } from "./isReadableStream";
+import { Response } from "./Response";
+import { pipeline } from "node:stream/promises";
 
 type HttpsOptions = {
     key: Buffer;
@@ -37,7 +39,7 @@ export class RouterServer {
         this.requestMiddlewares.push(middleware)
     }
 
-    errorToResponse(e: Error): EncodedResponse {
+    errorToResponse(e: Error): Response<SimpleErrors> {
         const headers = {
             "Content-Type": "application/json",
             "Cache-Control": "no-cache",
@@ -46,23 +48,38 @@ export class RouterServer {
 
         // Todo: implement special errors to send custom status codes
         if (isSimpleError(e)) {
-            return new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(new SimpleErrors(e)))
+            return new Response(
+                new SimpleErrors(e),
+                e.statusCode ?? 400, 
+                headers,
+            );
         } else if (isSimpleErrors(e)) {
-            return new EncodedResponse(e.statusCode ?? 400, headers, JSON.stringify(e))
+            return new Response(
+                e, 
+                e.statusCode ?? 400,
+                headers
+            );
         }
-        return new EncodedResponse(500, headers, JSON.stringify(new SimpleErrors(new SimpleError({
-            code: "internal_error",
-            message: "An internal error occurred",
-        }))))
+
+        return new Response(
+            new SimpleErrors(
+                new SimpleError({
+                    code: "internal_error",
+                    message: "An internal error occurred",
+                })
+            ),
+            500,
+            headers
+        );
     }
 
-    processError(res: http.ServerResponse, e: Error, request: Request) {
+    async processError(res: http.ServerResponse, e: Error, request: Request) {
         const response = this.errorToResponse(e);
         
         // Process response middlewares
         try {
             for (const middleware of this.responseMiddlewares) {
-                middleware.handleResponse(request, response, e)
+                await middleware.handleResponse(request, response, e)
             }
         } catch (ee) {
             console.error('Error in response middlewares', ee);
@@ -70,19 +87,20 @@ export class RouterServer {
 
         // Make sure we hang up
         try {
+            const encodedResponse = EncodedResponse.encode(response, request);
             if (res.headersSent) {
                 console.error('Headers already sent, cannot send error to client');
                 
                 // Somehow indicate to the client that something went wrong - since we already wrote the status code
                 res.end()
             } else {
-                this.setHead(res, response);
+                this.setHead(res, encodedResponse);
 
-                if (isReadableStream(response.body)) {
+                if (isReadableStream(encodedResponse.body)) {
                     console.error('Cannot use Readable streams for error responses');
                     res.end()
                 } else {
-                    res.end(response.body);
+                    res.end(encodedResponse.body);
                 }
             }
         } catch (e) {
@@ -130,17 +148,23 @@ export class RouterServer {
                     });
                 }
 
-                // Process response middlewares
-                for (const middleware of this.requestMiddlewares) {
-                    middleware.handleRequest(request)
-                }
-
                 let run = async () => {
+                    // Process response middlewares
+                    for (const middleware of this.requestMiddlewares) {
+                        middleware.handleRequest(request)
+                    }
+
                     let response = await this.router.run(request, res);
 
                     if (!response) {
                         // Create a new response
-                        response = new EncodedResponse(404, {}, "Endpoint not found.")
+                        response = this.errorToResponse(
+                            new SimpleError({
+                                code: "not_found",
+                                message: "Endpoint not found",
+                                statusCode: 404
+                            })
+                        );
                     }
 
                     // Add default headers
@@ -153,19 +177,14 @@ export class RouterServer {
                     // Add cache control no cache
                     if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
 
-                    if (isReadableStream(response.body)) {
-                        console.log('Streaming data to client');
-                        response.body.on('close', () => {
-                            console.log('Stream closed');
-                        });
-
-                        response.body.on('error', (e) => {
-                            console.error('Stream error', e);
-                            this.processError(res, e, request);
-                        });
+                    // Process response middlewares
+                    for (const middleware of this.responseMiddlewares) {
+                        await middleware.handleResponse(request, response)
                     }
 
-                    return response;
+                    // Encode
+                    const encodedResponse = EncodedResponse.encode(response, request);
+                    return encodedResponse;
                 }
 
                 for (const middleware of this.requestMiddlewares) {
@@ -174,31 +193,34 @@ export class RouterServer {
                     run = wrapRun ? (async () => wrapRun(currentRun, request)) : currentRun;
                 }
 
-                const response = await run();
+                const encodedResponse = await run();
 
-                // Process response middlewares
-                for (const middleware of this.responseMiddlewares) {
-                    middleware.handleResponse(request, response)
-                }
-                
                 // Write to client
-                this.setHead(res, response);
+                this.setHead(res, encodedResponse);
 
-                if (isReadableStream(response.body)) {
-                    response.body.pipe(res);
+                if (isReadableStream(encodedResponse.body)) {
+                    const stream = encodedResponse.body;
+                    console.log('Streaming data to client');
+
+                    await pipeline(
+                        stream,
+                        res
+                    )
+
+                    console.log('Successfully streamed data to client');
                 } else {
-                    res.end(response.body);
+                    res.end(encodedResponse.body);
                 }
 
                 // Write to logs
                 if (this.verbose) {
                     console.log({
-                        headers: response.headers,
-                        body: response.body,
+                        headers: encodedResponse.headers,
+                        body: encodedResponse.body,
                     });
                 }
             } catch (e) {
-                this.processError(res, e, request);
+                await this.processError(res, e, request);
                 return;
             }
         } catch (e2) {

@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import http from "http";
 
-import { EncodedResponse } from "./EncodedResponse";
+import { Response } from "./Response";
 import { Endpoint } from "./Endpoint";
 import { Request } from "./Request";
 
@@ -87,7 +87,7 @@ export class Router {
         }
     }
 
-    async run(request: Request, response?: http.ServerResponse): Promise<EncodedResponse | null> {
+    async run(request: Request, response?: http.ServerResponse): Promise<Response | null> {
         for (const endpoint of this.endpoints) {
             const r = await endpoint.run(request, response);
             if (r !== null) {

@@ -50,13 +50,13 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         throw new Error("Route is not matching");
     }
 
-    async run(request: Request, response?: http.ServerResponse): Promise<EncodedResponse | null> {
+    async run(request: Request, response?: http.ServerResponse): Promise<Response<ResponseBody> | null> {
         const [match, params] = this.doesMatch(request, response);
         if (match) {
             if (!params) {
                 throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
             }
-            return EncodedResponse.encode(await this.getResponse(request, params), request);
+            return await this.getResponse(request, params);
         }
         return null;
     }
