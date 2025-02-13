@@ -1,4 +1,4 @@
-import { encodeObject } from '@simonbackx/simple-encoding';
+import { EncodeMedium, encodeObject } from '@simonbackx/simple-encoding';
 import { SimpleError } from '@simonbackx/simple-errors';
 import http from 'http';
 import urlParser from 'url';
@@ -77,7 +77,10 @@ export class Request {
         const parsedUrl = urlParser.parse(url, true);
 
         if (this.defaultVersion !== undefined) {
-            body = encodeObject(body, { version: this.defaultVersion });
+            body = encodeObject(body, {
+                version: this.defaultVersion,
+                medium: EncodeMedium.Network,
+            });
         }
 
         return new Request({

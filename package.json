@@ -12,12 +12,12 @@
         "dist"
     ],
     "peerDependencies": {
-        "@simonbackx/simple-encoding": "^2.8.1",
+        "@simonbackx/simple-encoding": "^2.20.0",
         "@simonbackx/simple-errors": "^1.4.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.11.1",
-        "@simonbackx/simple-encoding": "^2.8.1",
+        "@simonbackx/simple-encoding": "^2.20.0",
         "@simonbackx/simple-errors": "^1.4.0",
         "@types/jest": "^25.1.4",
         "@types/node": "^20.12.7",
