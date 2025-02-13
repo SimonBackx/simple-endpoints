@@ -1,6 +1,4 @@
 import { Decoder, Encodeable } from '@simonbackx/simple-encoding';
-import { SimpleError } from '@simonbackx/simple-errors';
-import { SimpleErrors } from '@simonbackx/simple-errors';
 import http from 'http';
 import { Readable } from 'node:stream';
 
@@ -14,22 +12,10 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
     protected bodyDecoder: Decoder<RequestBody> | undefined;
 
     protected abstract doesMatch(request: Request, response?: http.ServerResponse): [true, Params] | [false];
-    protected abstract handle(request: DecodedRequest<Params, Query, RequestBody>): Promise<Response<ResponseBody>>;
+    abstract handle(request: DecodedRequest<Params, Query, RequestBody>): Promise<Response<ResponseBody>>;
 
     async getResponse(request: Request, params: Params): Promise<Response<ResponseBody>> {
-        let decodedRequest: DecodedRequest<Params, Query, RequestBody>;
-        try {
-            decodedRequest = await DecodedRequest.fromRequest(request, params, this.queryDecoder, this.bodyDecoder);
-        }
-        catch (e) {
-            if (e.code && e.message) {
-                throw new SimpleError(e);
-            }
-            if (e.errors) {
-                throw new SimpleErrors(...e.errors);
-            }
-            throw e;
-        }
+        const decodedRequest = await DecodedRequest.fromRequest(request, params, this.queryDecoder, this.bodyDecoder);
         return await this.handle(decodedRequest);
     }
 
@@ -51,6 +37,22 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         throw new Error('Route is not matching');
     }
 
+    /**
+     * Checks whether the request matches this endpoint and returns the decoded request if it does.
+     * Next you'll need to pass this to the handle method to get a response.
+     */
+    async decode(request: Request, response?: http.ServerResponse): Promise<DecodedRequest<Params, Query, RequestBody> | null> {
+        const [match, params] = this.doesMatch(request, response);
+        if (match) {
+            if (!params) {
+                throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
+            }
+            return await DecodedRequest.fromRequest(request, params, this.queryDecoder, this.bodyDecoder);
+        }
+        return null;
+    }
+
+    /*
     async run(request: Request, response?: http.ServerResponse): Promise<Response<ResponseBody> | null> {
         const [match, params] = this.doesMatch(request, response);
         if (match) {
@@ -60,7 +62,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             return await this.getResponse(request, params);
         }
         return null;
-    }
+    } */
 
     static parseParameters<Keys extends string>(
         url: string,

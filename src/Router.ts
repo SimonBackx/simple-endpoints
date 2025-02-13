@@ -4,6 +4,7 @@ import http from 'http';
 import { Response } from './Response';
 import { Endpoint } from './Endpoint';
 import { Request } from './Request';
+import { DecodedRequest } from './DecodedRequest';
 
 async function directoryExists(filePath): Promise<boolean> {
     try {
@@ -89,11 +90,22 @@ export class Router {
         }
     }
 
-    async run(request: Request, response?: http.ServerResponse): Promise<Response | null> {
+    /* async run(request: Request, response?: http.ServerResponse): Promise<Response | null> {
         for (const endpoint of this.endpoints) {
             const r = await endpoint.run(request, response);
             if (r !== null) {
                 return r;
+            }
+        }
+
+        return null;
+    } */
+
+    async decode<Params, Query, Body>(request: Request, response?: http.ServerResponse): Promise<{ request: DecodedRequest<Params, Query, Body>; endpoint: Endpoint<Params, Query, Body, any> } | null> {
+        for (const endpoint of this.endpoints) {
+            const r = await endpoint.decode(request, response);
+            if (r !== null) {
+                return { request: r, endpoint };
             }
         }
 

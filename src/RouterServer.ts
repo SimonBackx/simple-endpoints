@@ -2,14 +2,14 @@ import { isSimpleError, isSimpleErrors, SimpleError, SimpleErrors } from '@simon
 import http from 'http';
 import https from 'https';
 
+import { pipeline } from 'node:stream/promises';
 import { EncodedResponse } from './EncodedResponse';
+import { isReadableStream } from './isReadableStream';
 import { Request } from './Request';
 import { RequestMiddleware } from './RequestMiddleware';
+import { Response } from './Response';
 import { ResponseMiddleware } from './ResponseMiddleware';
 import { Router } from './Router';
-import { isReadableStream } from './isReadableStream';
-import { Response } from './Response';
-import { pipeline } from 'node:stream/promises';
 
 type HttpsOptions = {
     key: Buffer;
@@ -157,12 +157,15 @@ export class RouterServer {
                 let run = async () => {
                     // Process response middlewares
                     for (const middleware of this.requestMiddlewares) {
-                        middleware.handleRequest(request);
+                        if (middleware.handleRequest) {
+                            await middleware.handleRequest(request);
+                        }
                     }
 
-                    let response = await this.router.run(request, res);
+                    const decoded = await this.router.decode(request, res);
+                    let response: Response;
 
-                    if (!response) {
+                    if (!decoded) {
                         // Create a new response
                         response = this.errorToResponse(
                             new SimpleError({
@@ -171,6 +174,17 @@ export class RouterServer {
                                 statusCode: 404,
                             }),
                         );
+                    }
+                    else {
+                        const { endpoint, request: decodedRequest } = decoded;
+
+                        for (const middleware of this.requestMiddlewares) {
+                            if (middleware.handleDecodedRequest) {
+                                await middleware.handleDecodedRequest(decodedRequest, endpoint);
+                            }
+                        }
+
+                        response = await endpoint.handle(decodedRequest);
                     }
 
                     // Add default headers

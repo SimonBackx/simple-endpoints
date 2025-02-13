@@ -26,10 +26,23 @@ export class TestServer {
         let run = async () => {
             // Process response middlewares
             for (const middleware of this.requestMiddlewares) {
-                middleware.handleRequest(request);
+                if (middleware.handleRequest) {
+                    await middleware.handleRequest(request);
+                }
             }
 
-            const response = await endpoint.run(request);
+            const decoded = await endpoint.decode(request);
+            if (decoded === null) {
+                throw new Error('Route is not matching');
+            }
+
+            for (const middleware of this.requestMiddlewares) {
+                if (middleware.handleDecodedRequest) {
+                    await middleware.handleDecodedRequest(decoded, endpoint);
+                }
+            }
+
+            const response = await endpoint.handle(decoded);
 
             if (!response) {
                 throw new Error('Route is not matching');
