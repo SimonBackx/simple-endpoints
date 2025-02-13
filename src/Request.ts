@@ -1,9 +1,9 @@
-import { encodeObject } from "@simonbackx/simple-encoding";
-import { SimpleError } from "@simonbackx/simple-errors";
-import http from "http";
-import urlParser from "url";
+import { encodeObject } from '@simonbackx/simple-encoding';
+import { SimpleError } from '@simonbackx/simple-errors';
+import http from 'http';
+import urlParser from 'url';
 
-export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "OPTIONS";
+export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'OPTIONS';
 export class Request {
     method: HttpMethod;
     url: string;
@@ -19,7 +19,7 @@ export class Request {
     get body(): Promise<string> {
         if (!this.bodyPromise) {
             if (!this.request) {
-                throw new Error("Expected a body promise or a request");
+                throw new Error('Expected a body promise or a request');
             }
             const req = this.request;
             this.bodyPromise = new Promise<string>((resolve, reject) => {
@@ -27,15 +27,15 @@ export class Request {
                 let gotError = false;
 
                 // we can access HTTP headers
-                req.on("data", (chunk) => {
+                req.on('data', (chunk) => {
                     chunks.push(chunk);
                 });
-                req.on("error", (err) => {
+                req.on('error', (err) => {
                     gotError = true;
                     reject(err);
                 });
 
-                req.on("end", () => {
+                req.on('end', () => {
                     if (gotError) {
                         return;
                     }
@@ -70,7 +70,7 @@ export class Request {
         this.version = req.version;
 
         // If version is undefined: check the URL
-        this.readVersionFromUrl()
+        this.readVersionFromUrl();
     }
 
     static buildJson(method: HttpMethod, url: string, host?: string, body?: any): Request {
@@ -82,23 +82,23 @@ export class Request {
 
         return new Request({
             method: method,
-            url: parsedUrl.pathname ?? "",
-            host: host || "",
-            body: Promise.resolve(JSON.stringify(body) || ""),
+            url: parsedUrl.pathname ?? '',
+            host: host || '',
+            body: Promise.resolve(JSON.stringify(body) || ''),
             query: parsedUrl.query,
         });
     }
 
     getIP(): string {
         let ipAddress = this.request?.socket.remoteAddress;
-        if (this.headers["x-real-ip"] && typeof this.headers["x-real-ip"] == "string" && (ipAddress == "127.0.0.1" || ipAddress == "0.0.0.0")) {
-            ipAddress = this.headers["x-real-ip"];
+        if (this.headers['x-real-ip'] && typeof this.headers['x-real-ip'] === 'string' && (ipAddress == '127.0.0.1' || ipAddress == '0.0.0.0')) {
+            ipAddress = this.headers['x-real-ip'];
         }
         if (!ipAddress) {
             ipAddress = '?';
         }
 
-        return ipAddress.split(":", 2)[0]
+        return ipAddress.split(':', 2)[0];
     }
 
     /**
@@ -111,12 +111,12 @@ export class Request {
         // Check struct version in headers
         let version: number | undefined = (this.constructor as typeof Request).defaultVersion;
 
-        if (this.headers["x-version"] && !Array.isArray(this.headers["x-version"])) {
-            version = Number.parseInt(this.headers["x-version"]);
+        if (this.headers['x-version'] && !Array.isArray(this.headers['x-version'])) {
+            version = Number.parseInt(this.headers['x-version']);
             if (isNaN(version)) {
                 throw new SimpleError({
-                    code: "invalid_header",
-                    message: "The X-Version header should contain a valid integer",
+                    code: 'invalid_header',
+                    message: 'The X-Version header should contain a valid integer',
                     statusCode: 400,
                 });
             }
@@ -124,8 +124,8 @@ export class Request {
 
         if (version === undefined) {
             throw new SimpleError({
-                code: "missing_version",
-                message: "Providing a version is required. Use the URL or the X-Version header.",
+                code: 'missing_version',
+                message: 'Providing a version is required. Use the URL or the X-Version header.',
                 statusCode: 400,
             });
         }
@@ -144,36 +144,37 @@ export class Request {
             return;
         }
 
-        const urlVersionParts = this.url.substring(1).split("/");
+        const urlVersionParts = this.url.substring(1).split('/');
         let version: number | undefined;
 
         if (urlVersionParts.length > 0) {
             const possibleVersion = urlVersionParts[0];
-            if (possibleVersion.startsWith("v")) {
+            if (possibleVersion.startsWith('v')) {
                 version = parseInt(possibleVersion.substring(1));
                 if (isNaN(version)) {
                     version = undefined;
-                } else {
+                }
+                else {
                     this.url = this.url.substring(possibleVersion.length + 1);
                 }
             }
         }
         if (version) {
-            this.version = version
+            this.version = version;
         }
     }
 
     static fromHttp(req: http.IncomingMessage): Request {
         if (!req.url) {
-            throw new Error("Something went wrong");
+            throw new Error('Something went wrong');
         }
 
         const parsedUrl = urlParser.parse(req.url, true);
-        let host = req.headers.host ?? "";
-        const path = parsedUrl.pathname ?? "";
+        let host = req.headers.host ?? '';
+        const path = parsedUrl.pathname ?? '';
 
         // Remove port
-        const splitted = host.split(":");
+        const splitted = host.split(':');
         host = splitted[0];
 
         return new Request({

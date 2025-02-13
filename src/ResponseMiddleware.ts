@@ -1,5 +1,5 @@
-import { Response } from "./Response";
-import { Request } from "./Request";
+import { Response } from './Response';
+import { Request } from './Request';
 
 export interface ResponseMiddleware {
     /**

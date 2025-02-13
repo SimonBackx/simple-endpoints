@@ -1,6 +1,6 @@
-import { Encodeable } from "@simonbackx/simple-encoding";
-import http from "http";
-import { Readable } from "node:stream";
+import { Encodeable } from '@simonbackx/simple-encoding';
+import http from 'http';
+import { Readable } from 'node:stream';
 
 export type SupportedResponseBodyTypes = Encodeable | Encodeable[] | string | Buffer | Uint8Array | Readable | undefined;
 

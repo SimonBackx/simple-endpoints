@@ -1,20 +1,20 @@
-import { isSimpleError, isSimpleErrors, SimpleError, SimpleErrors } from "@simonbackx/simple-errors";
-import http from "http";
-import https from "https";
+import { isSimpleError, isSimpleErrors, SimpleError, SimpleErrors } from '@simonbackx/simple-errors';
+import http from 'http';
+import https from 'https';
 
-import { EncodedResponse } from "./EncodedResponse";
-import { Request } from "./Request";
-import { RequestMiddleware } from "./RequestMiddleware";
-import { ResponseMiddleware } from "./ResponseMiddleware";
-import { Router } from "./Router";
-import { isReadableStream } from "./isReadableStream";
-import { Response } from "./Response";
-import { pipeline } from "node:stream/promises";
+import { EncodedResponse } from './EncodedResponse';
+import { Request } from './Request';
+import { RequestMiddleware } from './RequestMiddleware';
+import { ResponseMiddleware } from './ResponseMiddleware';
+import { Router } from './Router';
+import { isReadableStream } from './isReadableStream';
+import { Response } from './Response';
+import { pipeline } from 'node:stream/promises';
 
 type HttpsOptions = {
     key: Buffer;
     cert: Buffer;
-}
+};
 
 export class RouterServer {
     router: Router;
@@ -23,8 +23,8 @@ export class RouterServer {
     verbose = false;
     httpsOptions: HttpsOptions | null;
 
-    requestMiddlewares: RequestMiddleware[] = []
-    responseMiddlewares: ResponseMiddleware[] = []
+    requestMiddlewares: RequestMiddleware[] = [];
+    responseMiddlewares: ResponseMiddleware[] = [];
 
     constructor(router: Router, option: HttpsOptions | null = null) {
         this.router = router;
@@ -32,17 +32,17 @@ export class RouterServer {
     }
 
     addResponseMiddleware(middleware: ResponseMiddleware) {
-        this.responseMiddlewares.push(middleware)
+        this.responseMiddlewares.push(middleware);
     }
 
     addRequestMiddleware(middleware: RequestMiddleware) {
-        this.requestMiddlewares.push(middleware)
+        this.requestMiddlewares.push(middleware);
     }
 
     errorToResponse(e: Error): Response<SimpleErrors> {
         const headers = {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
         };
         Object.assign(headers, this.defaultHeaders);
 
@@ -50,38 +50,40 @@ export class RouterServer {
         if (isSimpleError(e)) {
             return new Response(
                 new SimpleErrors(e),
-                e.statusCode ?? 400, 
+                e.statusCode ?? 400,
                 headers,
             );
-        } else if (isSimpleErrors(e)) {
+        }
+        else if (isSimpleErrors(e)) {
             return new Response(
-                e, 
+                e,
                 e.statusCode ?? 400,
-                headers
+                headers,
             );
         }
 
         return new Response(
             new SimpleErrors(
                 new SimpleError({
-                    code: "internal_error",
-                    message: "An internal error occurred",
-                })
+                    code: 'internal_error',
+                    message: 'An internal error occurred',
+                }),
             ),
             500,
-            headers
+            headers,
         );
     }
 
     async processError(res: http.ServerResponse, e: Error, request: Request) {
         const response = this.errorToResponse(e);
-        
+
         // Process response middlewares
         try {
             for (const middleware of this.responseMiddlewares) {
-                await middleware.handleResponse(request, response, e)
+                await middleware.handleResponse(request, response, e);
             }
-        } catch (ee) {
+        }
+        catch (ee) {
             console.error('Error in response middlewares', ee);
         }
 
@@ -90,20 +92,23 @@ export class RouterServer {
             const encodedResponse = EncodedResponse.encode(response, request);
             if (res.headersSent) {
                 console.error('Headers already sent, cannot send error to client');
-                
+
                 // Somehow indicate to the client that something went wrong - since we already wrote the status code
-                res.end()
-            } else {
+                res.end();
+            }
+            else {
                 this.setHead(res, encodedResponse);
 
                 if (isReadableStream(encodedResponse.body)) {
                     console.error('Cannot use Readable streams for error responses');
-                    res.end()
-                } else {
+                    res.end();
+                }
+                else {
                     res.end(encodedResponse.body);
                 }
             }
-        } catch (e) {
+        }
+        catch (e) {
             console.error('Failed to end error response', e);
         }
     }
@@ -114,7 +119,7 @@ export class RouterServer {
      */
     setHead(res: http.ServerResponse, response: EncodedResponse) {
         res.statusCode = response.status;
-        
+
         // Removea all headers that were set already
         for (const header in res.getHeaders()) {
             res.removeHeader(header);
@@ -134,7 +139,8 @@ export class RouterServer {
             let request: Request;
             try {
                 request = Request.fromHttp(req);
-            } catch (e) {
+            }
+            catch (e) {
                 console.error(e);
                 res.end();
                 return;
@@ -151,7 +157,7 @@ export class RouterServer {
                 let run = async () => {
                     // Process response middlewares
                     for (const middleware of this.requestMiddlewares) {
-                        middleware.handleRequest(request)
+                        middleware.handleRequest(request);
                     }
 
                     let response = await this.router.run(request, res);
@@ -160,10 +166,10 @@ export class RouterServer {
                         // Create a new response
                         response = this.errorToResponse(
                             new SimpleError({
-                                code: "not_found",
-                                message: "Endpoint not found",
-                                statusCode: 404
-                            })
+                                code: 'not_found',
+                                message: 'Endpoint not found',
+                                statusCode: 404,
+                            }),
                         );
                     }
 
@@ -175,22 +181,22 @@ export class RouterServer {
                     }
 
                     // Add cache control no cache
-                    if (!response.headers["Cache-Control"]) response.headers["Cache-Control"] = "no-cache";
+                    if (!response.headers['Cache-Control']) response.headers['Cache-Control'] = 'no-cache';
 
                     // Process response middlewares
                     for (const middleware of this.responseMiddlewares) {
-                        await middleware.handleResponse(request, response)
+                        await middleware.handleResponse(request, response);
                     }
 
                     // Encode
                     const encodedResponse = EncodedResponse.encode(response, request);
                     return encodedResponse;
-                }
+                };
 
                 for (const middleware of this.requestMiddlewares) {
                     const currentRun = run;
-                    const wrapRun = middleware.wrapRun
-                    run = wrapRun ? (async () => wrapRun(currentRun, request)) : currentRun;
+                    const wrapRun = middleware.wrapRun;
+                    run = wrapRun ? async () => wrapRun(currentRun, request) : currentRun;
                 }
 
                 const encodedResponse = await run();
@@ -204,11 +210,12 @@ export class RouterServer {
 
                     await pipeline(
                         stream,
-                        res
-                    )
+                        res,
+                    );
 
                     console.log('Successfully streamed data to client');
-                } else {
+                }
+                else {
                     res.end(encodedResponse.body);
                 }
 
@@ -219,11 +226,13 @@ export class RouterServer {
                         body: encodedResponse.body,
                     });
                 }
-            } catch (e) {
+            }
+            catch (e) {
                 await this.processError(res, e, request);
                 return;
             }
-        } catch (e2) {
+        }
+        catch (e2) {
             // Catch errors in error logic
             console.error(e2);
         }
@@ -231,16 +240,17 @@ export class RouterServer {
 
     listen(port: number) {
         if (this.server) {
-            throw new Error("Already listening.");
+            throw new Error('Already listening.');
         }
         if (this.httpsOptions) {
             this.server = https.createServer(this.httpsOptions, this.requestListener.bind(this));
-        } else {
+        }
+        else {
             this.server = http.createServer(this.requestListener.bind(this));
         }
         this.server.timeout = 10000;
 
-        this.server.listen(port, "0.0.0.0", () => {
+        this.server.listen(port, '0.0.0.0', () => {
             console.log(`Server running at ${this.httpsOptions ? 'https' : 'http'}://0.0.0.0:${port}`);
         });
     }
@@ -249,8 +259,8 @@ export class RouterServer {
         console.log(`Stoppping ${this.httpsOptions ? 'HTTPS' : 'HTTP'} server...`);
         return new Promise((resolve, reject) => {
             if (!this.server) {
-                reject(new Error("Already stopped."));
-                return
+                reject(new Error('Already stopped.'));
+                return;
             }
             this.server.close((err) => {
                 if (err) {

@@ -1,8 +1,8 @@
-import { Decoder, ObjectData } from "@simonbackx/simple-encoding";
-import http from "http";
+import { Decoder, ObjectData } from '@simonbackx/simple-encoding';
+import http from 'http';
 import { parse } from 'querystring';
 
-import { HttpMethod, Request } from "./Request";
+import { HttpMethod, Request } from './Request';
 
 export class DecodedRequest<Params, Query, Body> {
     method: HttpMethod;
@@ -22,7 +22,7 @@ export class DecodedRequest<Params, Query, Body> {
         request: Request,
         params: Params,
         queryDecoder: Decoder<Query> | undefined,
-        bodyDecoder: Decoder<Body> | undefined
+        bodyDecoder: Decoder<Body> | undefined,
     ): Promise<DecodedRequest<Params, Query, Body>> {
         const r = new DecodedRequest<Params, Query, Body>();
         r.method = request.method;
@@ -38,16 +38,16 @@ export class DecodedRequest<Params, Query, Body> {
 
             const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, { version })) : undefined;
             r.query = query as Query;
-            
+
             // Read body type
-            if (r.headers["content-type"]?.toLowerCase().startsWith("application/x-www-form-urlencoded")) {
+            if (r.headers['content-type']?.toLowerCase().startsWith('application/x-www-form-urlencoded')) {
                 const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(parse(await request.body), { version })) : undefined;
                 r.body = body as Body;
-            } else {
+            }
+            else {
                 const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version })) : undefined;
                 r.body = body as Body;
             }
-            
         }
 
         return r;

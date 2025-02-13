@@ -1,14 +1,15 @@
-import { promises as fs } from "fs";
-import http from "http";
+import { promises as fs } from 'fs';
+import http from 'http';
 
-import { Response } from "./Response";
-import { Endpoint } from "./Endpoint";
-import { Request } from "./Request";
+import { Response } from './Response';
+import { Endpoint } from './Endpoint';
+import { Request } from './Request';
 
 async function directoryExists(filePath): Promise<boolean> {
     try {
         return (await fs.stat(filePath)).isDirectory();
-    } catch (err) {
+    }
+    catch (err) {
         return false;
     }
 }
@@ -22,36 +23,37 @@ function isEndpointType(endpoint: any): endpoint is EndpointConstructor {
 
 export class Router {
     endpoints: GenericEndpoint[] = [];
-    verbose = false
+    verbose = false;
 
     async loadAllEndpoints(folder: string) {
-        const parts = folder.split("/");
+        const parts = folder.split('/');
         const firstPart = parts.shift();
         if (firstPart === undefined) {
-            throw new Error("Invalid folder path");
+            throw new Error('Invalid folder path');
         }
         let folderQueue: string[] = [firstPart];
 
         for (const part of parts) {
-            if (part == "*") {
+            if (part == '*') {
                 const newQueue: string[] = [];
                 for (folder of folderQueue) {
                     // Read all directories
                     const recursiveFolders = (await fs.readdir(folder, { withFileTypes: true }))
-                        .filter((dirent) => dirent.isDirectory())
-                        .map((dirent) => folder + "/" + dirent.name);
+                        .filter(dirent => dirent.isDirectory())
+                        .map(dirent => folder + '/' + dirent.name);
                     newQueue.push(...recursiveFolders);
                 }
                 folderQueue = newQueue;
-            } else {
-                folderQueue = folderQueue.map((folder) => folder + "/" + part);
+            }
+            else {
+                folderQueue = folderQueue.map(folder => folder + '/' + part);
             }
         }
 
         for (const f of folderQueue) {
             if (await directoryExists(f)) {
                 if (this.verbose) {
-                    console.log("Endpoints from " + f);
+                    console.log('Endpoints from ' + f);
                 }
                 await this.loadEndpoints(f);
             }
@@ -64,14 +66,14 @@ export class Router {
         const files = await fs.readdir(folder);
 
         for (const file of files) {
-            const p = folder + "/" + file;
-            if (file.includes(".test.")) {
+            const p = folder + '/' + file;
+            if (file.includes('.test.')) {
                 continue;
             }
-            if (file.endsWith(".d.ts")) {
+            if (file.endsWith('.d.ts')) {
                 continue;
             }
-            if (!file.endsWith(".ts") && !file.endsWith(".js")) {
+            if (!file.endsWith('.ts') && !file.endsWith('.js')) {
                 continue;
             }
             const imported = await import(p);
@@ -79,7 +81,7 @@ export class Router {
                 const element = imported[key];
                 if (isEndpointType(element)) {
                     if (this.verbose) {
-                        console.log("Loaded " + key);
+                        console.log('Loaded ' + key);
                     }
                     this.endpoints.push(new element());
                 }
