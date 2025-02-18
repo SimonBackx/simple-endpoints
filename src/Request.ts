@@ -104,6 +104,18 @@ export class Request {
         return ipAddress.split(':', 2)[0];
     }
 
+    setVersionIfNotSet() {
+        if (this.version === undefined) {
+            try {
+                this.version = this.getVersion();
+            }
+            catch (e) {
+                // Ignore
+                this.version = 0;
+            }
+        }
+    }
+
     /**
      * Return the number in the X-Version header or throw if invalid
      */

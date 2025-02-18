@@ -14,20 +14,12 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
     protected abstract doesMatch(request: Request, response?: http.ServerResponse): [true, Params] | [false];
     abstract handle(request: DecodedRequest<Params, Query, RequestBody>): Promise<Response<ResponseBody>>;
 
-    async getResponse(request: Request, params: Params): Promise<Response<ResponseBody>> {
-        const decodedRequest = await DecodedRequest.fromRequest(request, params, this.queryDecoder, this.bodyDecoder);
-        return await this.handle(decodedRequest);
-    }
-
     // Build for testing
     // it emulates some extra parts of the request to check if everything works
     async test(request: Request): Promise<Response<ResponseBody>> {
-        const [match, params] = this.doesMatch(request);
-        if (match) {
-            if (!params) {
-                throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
-            }
-            const response = await this.getResponse(request, params);
+        const decodedRequest = await this.decode(request);
+        if (decodedRequest) {
+            const response = await this.handle(decodedRequest);
 
             // Check if encoding works (ignoring the response)
             EncodedResponse.encode(response, request);
@@ -52,18 +44,6 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         return null;
     }
 
-    /*
-    async run(request: Request, response?: http.ServerResponse): Promise<Response<ResponseBody> | null> {
-        const [match, params] = this.doesMatch(request, response);
-        if (match) {
-            if (!params) {
-                throw new Error("Compiler doesn't optimize for this, but this should not be able to run");
-            }
-            return await this.getResponse(request, params);
-        }
-        return null;
-    } */
-
     static parseParameters<Keys extends string>(
         url: string,
         template: string,
@@ -72,7 +52,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         const parts = url.split('/');
         const templateParts = template.split('/');
 
-        if (parts.length != templateParts.length) {
+        if (parts.length !== templateParts.length) {
             // No match
             return;
         }
@@ -83,7 +63,7 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
             const part = parts[index];
 
             const templatePart = templateParts[index];
-            if (templatePart != part) {
+            if (templatePart !== part) {
                 const param = templatePart.substr(1);
                 if (params[param]) {
                     // Found a param

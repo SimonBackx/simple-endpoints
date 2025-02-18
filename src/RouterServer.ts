@@ -78,17 +78,19 @@ export class RouterServer {
         const response = this.errorToResponse(e);
 
         // Process response middlewares
-        try {
-            for (const middleware of this.responseMiddlewares) {
+        for (const middleware of this.responseMiddlewares) {
+            try {
                 await middleware.handleResponse(request, response, e);
             }
-        }
-        catch (ee) {
-            console.error('Error in response middlewares', ee);
+            catch (ee) {
+                console.error('Error in response middleware', ee);
+            }
         }
 
         // Make sure we hang up
         try {
+            // Make sure we can also encode errors properly if no version was set in the request (prevents another error)
+            request.setVersionIfNotSet();
             const encodedResponse = EncodedResponse.encode(response, request);
             if (res.headersSent) {
                 console.error('Headers already sent, cannot send error to client');
@@ -110,6 +112,21 @@ export class RouterServer {
         }
         catch (e) {
             console.error('Failed to end error response', e);
+            try {
+                res.statusCode = 500;
+                res.end('Internal server error');
+            }
+            catch (e2) {
+                console.error('Failed to end error response with body', e2);
+
+                // Try to hangup connection
+                try {
+                    res.socket?.end();
+                }
+                catch (e3) {
+                    console.error('Failed to hangup connection', e3);
+                }
+            }
         }
     }
 
