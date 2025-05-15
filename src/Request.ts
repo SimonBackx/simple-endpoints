@@ -252,6 +252,8 @@ export class Request {
             host: data.host || '',
             body,
             query: parsedUrl.query,
+            headers: data.headers,
+            version,
         });
     }
 
