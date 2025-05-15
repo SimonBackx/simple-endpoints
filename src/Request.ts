@@ -1,4 +1,4 @@
-import { EncodeMedium, encodeObject } from '@simonbackx/simple-encoding';
+import { EncodableObject, EncodeMedium, encodeObject } from '@simonbackx/simple-encoding';
 import { SimpleError } from '@simonbackx/simple-errors';
 import http from 'http';
 import urlParser from 'url';
@@ -71,6 +71,188 @@ export class Request {
 
         // If version is undefined: check the URL
         this.readVersionFromUrl();
+    }
+
+    static get(data: {
+        path: string;
+        host?: string;
+        headers?: http.IncomingHttpHeaders;
+        query?: any;
+        version?: number;
+    }) {
+        return this.build({
+            method: 'GET',
+            ...data,
+        });
+    }
+
+    static post(data: {
+        path: string;
+        host?: string;
+        headers?: http.IncomingHttpHeaders;
+        body?: (object & EncodableObject) | string | Promise<string>;
+        query?: any;
+        version?: number;
+    }) {
+        return this.build({
+            method: 'POST',
+            ...data,
+        });
+    }
+
+    static patch(data: {
+        path: string;
+        host?: string;
+        headers?: http.IncomingHttpHeaders;
+        body?: (object & EncodableObject) | string | Promise<string>;
+        query?: any;
+        version?: number;
+    }) {
+        return this.build({
+            method: 'PATCH',
+            ...data,
+        });
+    }
+
+    static delete(data: {
+        path: string;
+        host?: string;
+        headers?: http.IncomingHttpHeaders;
+        body?: (object & EncodableObject) | string | Promise<string>;
+        query?: any;
+        version?: number;
+    }) {
+        return this.build({
+            method: 'DELETE',
+            ...data,
+        });
+    }
+
+    static build(data: {
+        method: HttpMethod;
+        path: string;
+        host?: string;
+        headers?: http.IncomingHttpHeaders;
+        body?: (object & EncodableObject) | string | Promise<string>;
+        query?: any;
+        version?: number;
+    }) {
+        const version = data.version ?? this.defaultVersion;
+        let queryString = '';
+        if (data.query) {
+            const query = encodeObject(data.query, {
+                version: version ?? 0,
+                medium: EncodeMedium.Network,
+            });
+
+            if (query !== undefined && query !== null) {
+                if (typeof query === 'object' && !Array.isArray(query)) {
+                    const params = new URLSearchParams();
+                    for (const key in query) {
+                        const value = query[key];
+                        if (value === null || value === undefined) {
+                            // skip
+                        }
+                        else if (typeof value === 'boolean') {
+                            params.set(key, value ? 'true' : 'false');
+                        }
+                        else if (typeof value === 'number') {
+                            if (Number.isFinite(value)) {
+                                params.set(key, value.toString());
+                            }
+                            else {
+                                throw new SimpleError({
+                                    code: 'invalid_query',
+                                    message: 'Invalid query parameter with non-integer number value ' + value.toString(),
+                                    human: 'Er ging iets mis bij het omvormen van dit verzoek',
+                                });
+                            }
+                        }
+                        else if (typeof value === 'string') {
+                            params.set(key, value);
+                        }
+                        else if (Array.isArray(value)) {
+                            for (const v of value) {
+                                if (typeof v === 'boolean') {
+                                    params.append(key, v ? 'true' : 'false');
+                                }
+                                else if (typeof v === 'number') {
+                                    if (Number.isFinite(v)) {
+                                        params.set(key, v.toString());
+                                    }
+                                    else {
+                                        throw new SimpleError({
+                                            code: 'invalid_query',
+                                            message: 'Invalid query parameter with non-integer number value in array ' + v.toString(),
+                                            human: 'Er ging iets mis bij het omvormen van dit verzoek',
+                                        });
+                                    }
+                                }
+                                else if (typeof v === 'string') {
+                                    params.append(key, v);
+                                }
+                                else {
+                                    throw new SimpleError({
+                                        code: 'invalid_query',
+                                        message: 'Invalid query parameter with non-string array value',
+                                        human: 'Er ging iets mis bij het omvormen van dit verzoek',
+                                    });
+                                }
+                            }
+                        }
+                        else {
+                            throw new SimpleError({
+                                code: 'invalid_query',
+                                message: 'Invalid query parameter with non-string value',
+                                human: 'Er ging iets mis bij het omvormen van dit verzoek',
+                            });
+                        }
+                    }
+
+                    const s = params.toString();
+                    if (s.length) {
+                        queryString = '?' + s;
+                    }
+                }
+                else {
+                    throw new SimpleError({
+                        code: 'invalid_query',
+                        message: 'Invalid query parameter of type ' + (typeof query),
+                        human: 'Er ging iets mis bij het omvormen van dit verzoek',
+                    });
+                }
+            }
+        }
+
+        const url = data.path + queryString;
+        const parsedUrl = urlParser.parse(url, true);
+        let body: Promise<string> | undefined = undefined;
+
+        if (typeof data.body === 'object' && !(data.body instanceof Promise)) {
+            if (!version) {
+                throw new SimpleError({
+                    code: 'missing_version',
+                    message: 'Providing a version is required when sending JSON data',
+                    statusCode: 400,
+                });
+            }
+            const encoded = encodeObject(data.body, {
+                version,
+                medium: EncodeMedium.Network,
+            });
+            body = Promise.resolve(JSON.stringify(encoded) || '');
+        }
+        else {
+            body = typeof data.body === 'string' ? Promise.resolve(data.body) : data.body;
+        }
+
+        return new Request({
+            method: data.method,
+            url: parsedUrl.pathname ?? '',
+            host: data.host || '',
+            body,
+            query: parsedUrl.query,
+        });
     }
 
     static buildJson(method: HttpMethod, url: string, host?: string, body?: any): Request {
