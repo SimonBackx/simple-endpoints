@@ -1,4 +1,4 @@
-import { Decoder, ObjectData } from '@simonbackx/simple-encoding';
+import { Decoder, EncodeMedium, ObjectData } from '@simonbackx/simple-encoding';
 import http from 'http';
 import { parse } from 'querystring';
 
@@ -36,16 +36,16 @@ export class DecodedRequest<Params, Query, Body> {
             // Only require version if we have to decode something
             const version = request.getVersion();
 
-            const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, { version })) : undefined;
+            const query = queryDecoder !== undefined ? queryDecoder.decode(new ObjectData(request.query, { version, medium: EncodeMedium.Network })) : undefined;
             r.query = query as Query;
 
             // Read body type
             if (r.headers['content-type']?.toLowerCase().startsWith('application/x-www-form-urlencoded')) {
-                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(parse(await request.body), { version })) : undefined;
+                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(parse(await request.body), { version, medium: EncodeMedium.Network })) : undefined;
                 r.body = body as Body;
             }
             else {
-                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version })) : undefined;
+                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version, medium: EncodeMedium.Network })) : undefined;
                 r.body = body as Body;
             }
         }

@@ -1,10 +1,9 @@
-import { Encodeable } from '@simonbackx/simple-encoding';
+import { EncodeMedium } from '@simonbackx/simple-encoding';
 import http from 'http';
 
+import { isReadableStream } from './isReadableStream';
 import { Request } from './Request';
 import { Response, SupportedResponseBodyTypes } from './Response';
-import { Readable } from 'node:stream';
-import { isReadableStream } from './isReadableStream';
 
 export class EncodedResponse {
     status = 200;
@@ -35,18 +34,18 @@ export class EncodedResponse {
                 else {
                     if (Array.isArray(response.body)) {
                         if (process.env.NODE_ENV === 'development') {
-                            encoded.body = JSON.stringify(response.body.map(e => e.encode({ version })), undefined, 2);
+                            encoded.body = JSON.stringify(response.body.map(e => e.encode({ version, medium: EncodeMedium.Network })), undefined, 2);
                         }
                         else {
-                            encoded.body = JSON.stringify(response.body.map(e => e.encode({ version })));
+                            encoded.body = JSON.stringify(response.body.map(e => e.encode({ version, medium: EncodeMedium.Network })));
                         }
                     }
                     else {
                         if (process.env.NODE_ENV === 'development') {
-                            encoded.body = JSON.stringify(response.body.encode({ version }), undefined, 2);
+                            encoded.body = JSON.stringify(response.body.encode({ version, medium: EncodeMedium.Network }), undefined, 2);
                         }
                         else {
-                            encoded.body = JSON.stringify(response.body.encode({ version }));
+                            encoded.body = JSON.stringify(response.body.encode({ version, medium: EncodeMedium.Network }));
                         }
                     }
                 }
