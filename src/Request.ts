@@ -278,14 +278,22 @@ export class Request {
 
     getIP(): string {
         let ipAddress = this.request?.socket.remoteAddress;
-        if (this.headers['x-real-ip'] && typeof this.headers['x-real-ip'] === 'string' && (ipAddress == '127.0.0.1' || ipAddress == '0.0.0.0')) {
-            ipAddress = this.headers['x-real-ip'];
+        if (this.headers['x-forwarded-for'] && typeof this.headers['x-forwarded-for'] === 'string'
+            && (
+                ipAddress === '127.0.0.1'
+                || ipAddress === '0.0.0.0'
+                || ipAddress === '::1'
+                || ipAddress === '::ffff:127.0.0.1'
+            )
+        ) {
+            ipAddress = this.headers['x-forwarded-for'];
         }
+
         if (!ipAddress) {
             ipAddress = '?';
         }
 
-        return ipAddress.split(':', 2)[0];
+        return ipAddress;
     }
 
     setVersionIfNotSet() {
