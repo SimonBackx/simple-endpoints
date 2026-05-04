@@ -3,6 +3,7 @@ import http from 'http';
 import { parse } from 'querystring';
 
 import { HttpMethod, Request } from './Request';
+import { SimpleError } from '@simonbackx/simple-errors';
 
 export class DecodedRequest<Params, Query, Body> {
     method: HttpMethod;
@@ -41,12 +42,42 @@ export class DecodedRequest<Params, Query, Body> {
 
             // Read body type
             if (r.headers['content-type']?.toLowerCase().startsWith('application/x-www-form-urlencoded')) {
-                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(parse(await request.body), { version, medium: EncodeMedium.Network })) : undefined;
-                r.body = body as Body;
+                if (bodyDecoder !== undefined) {
+                    const str = await request.body;
+                    let parsed;
+                    try {
+                        parsed = parse(str);
+                    }
+                    catch (e) {
+                        throw new SimpleError({
+                            statusCode: 400,
+                            code: 'invalid_json',
+                            message: 'body is malformed (application/x-www-form-urlencoded) or wrong content-type',
+                        });
+                    }
+
+                    const body = bodyDecoder.decode(new ObjectData(parsed, { version, medium: EncodeMedium.Network }));
+                    r.body = body as Body;
+                }
             }
             else {
-                const body = bodyDecoder !== undefined ? bodyDecoder.decode(new ObjectData(JSON.parse(await request.body), { version, medium: EncodeMedium.Network })) : undefined;
-                r.body = body as Body;
+                if (bodyDecoder !== undefined) {
+                    const str = await request.body;
+                    let parsed;
+                    try {
+                        parsed = JSON.parse(str);
+                    }
+                    catch (e) {
+                        throw new SimpleError({
+                            statusCode: 400,
+                            code: 'invalid_json',
+                            message: 'JSON is malformed or wrong content-type',
+                        });
+                    }
+
+                    const body = bodyDecoder.decode(new ObjectData(parsed, { version, medium: EncodeMedium.Network }));
+                    r.body = body as Body;
+                }
             }
         }
 
