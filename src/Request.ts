@@ -16,6 +16,13 @@ export class Request {
     /// Use this e.g. to make test code shorter, but avoid using this in real code
     static defaultVersion?: number;
 
+    /**
+     * Socket addresses of our own reverse proxy — the only peer that connects to us locally. We
+     * only trust the X-Forwarded-For header when the direct connection comes from one of these, so
+     * a request arriving straight from the internet can never spoof it.
+     */
+    static trustedProxyAddresses = new Set(['127.0.0.1', '0.0.0.0', '::1', '::ffff:127.0.0.1']);
+
     get body(): Promise<string> {
         if (!this.bodyPromise) {
             if (!this.request) {
@@ -276,24 +283,39 @@ export class Request {
         });
     }
 
-    getIP(): string {
-        let ipAddress = this.request?.socket.remoteAddress;
-        if (this.headers['x-forwarded-for'] && typeof this.headers['x-forwarded-for'] === 'string'
-            && (
-                ipAddress === '127.0.0.1'
-                || ipAddress === '0.0.0.0'
-                || ipAddress === '::1'
-                || ipAddress === '::ffff:127.0.0.1'
-            )
+    /**
+     * All forwarded IP hops, left-to-right, as recorded in the X-Forwarded-For header — but only
+     * when the header is trusted (the direct connection comes from one of our reverse proxies, see
+     * {@link Request.trustedProxyAddresses}). Otherwise the single direct socket address. Empty when
+     * nothing is known.
+     *
+     * The left-most entry is the original client and the right-most is the address seen by the proxy
+     * closest to us (see {@link Request.clientIPPosition}).
+     */
+    getIPs(): string[] {
+        const remoteAddress = this.request?.socket.remoteAddress;
+        const forwardedFor = this.headers['x-forwarded-for'];
+
+        if (typeof forwardedFor === 'string'
+            && remoteAddress !== undefined
+            && Request.trustedProxyAddresses.has(remoteAddress)
         ) {
-            ipAddress = this.headers['x-forwarded-for'];
+            const hops = forwardedFor.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+            if (hops.length > 0) {
+                return hops;
+            }
         }
 
-        if (!ipAddress) {
-            ipAddress = '?';
+        return remoteAddress ? [remoteAddress] : [];
+    }
+
+    getIP(): string {
+        const ips = this.getIPs();
+        if (ips.length === 0) {
+            return '?';
         }
 
-        return ipAddress;
+        return ips[0];
     }
 
     setVersionIfNotSet() {
