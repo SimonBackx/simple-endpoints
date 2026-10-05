@@ -2,7 +2,7 @@ import { Decoder, EncodeMedium, ObjectData } from '@simonbackx/simple-encoding';
 import http from 'http';
 import { parse } from 'querystring';
 
-import { HttpMethod, Request } from './Request';
+import { HttpMethod, Request } from './Request.js';
 import { SimpleError } from '@simonbackx/simple-errors';
 
 export class DecodedRequest<Params, Query, Body> {

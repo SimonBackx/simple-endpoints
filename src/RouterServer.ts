@@ -3,13 +3,13 @@ import http from 'http';
 import https from 'https';
 
 import { pipeline } from 'node:stream/promises';
-import { EncodedResponse } from './EncodedResponse';
-import { isReadableStream } from './isReadableStream';
-import { Request } from './Request';
-import { RequestMiddleware } from './RequestMiddleware';
-import { Response } from './Response';
-import { ResponseMiddleware } from './ResponseMiddleware';
-import { Router } from './Router';
+import { EncodedResponse } from './EncodedResponse.js';
+import { isReadableStream } from './isReadableStream.js';
+import { Request } from './Request.js';
+import { RequestMiddleware } from './RequestMiddleware.js';
+import { Response } from './Response.js';
+import { ResponseMiddleware } from './ResponseMiddleware.js';
+import { Router } from './Router.js';
 
 type HttpsOptions = {
     key: Buffer;

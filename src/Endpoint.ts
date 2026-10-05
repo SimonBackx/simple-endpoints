@@ -2,10 +2,10 @@ import { Decoder, Encodeable } from '@simonbackx/simple-encoding';
 import http from 'http';
 import { Readable } from 'node:stream';
 
-import { DecodedRequest } from './DecodedRequest';
-import { EncodedResponse } from './EncodedResponse';
-import { Request } from './Request';
-import { Response } from './Response';
+import { DecodedRequest } from './DecodedRequest.js';
+import { EncodedResponse } from './EncodedResponse.js';
+import { Request } from './Request.js';
+import { Response } from './Response.js';
 
 export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends Encodeable | Encodeable[] | string | Buffer | Uint8Array | Readable | undefined> {
     protected queryDecoder: Decoder<Query> | undefined;

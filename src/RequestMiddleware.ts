@@ -1,6 +1,6 @@
-import { DecodedRequest } from './DecodedRequest';
-import { Endpoint } from './Endpoint';
-import { Request } from './Request';
+import { DecodedRequest } from './DecodedRequest.js';
+import { Endpoint } from './Endpoint.js';
+import { Request } from './Request.js';
 
 export interface RequestMiddleware {
     /**

@@ -1,9 +1,9 @@
 import { EncodeMedium } from '@simonbackx/simple-encoding';
 import http from 'http';
 
-import { isReadableStream } from './isReadableStream';
-import { Request } from './Request';
-import { Response, SupportedResponseBodyTypes } from './Response';
+import { isReadableStream } from './isReadableStream.js';
+import { Request } from './Request.js';
+import { Response, SupportedResponseBodyTypes } from './Response.js';
 
 export class EncodedResponse {
     status = 200;

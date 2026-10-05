@@ -1,7 +1,7 @@
-import { Request } from '../Request';
-import { DecodedRequest } from '../DecodedRequest';
-import { Response } from '../Response';
-import { Endpoint } from '../Endpoint';
+import { Request } from '../Request.js';
+import { DecodedRequest } from '../DecodedRequest.js';
+import { Response } from '../Response.js';
+import { Endpoint } from '../Endpoint.js';
 
 type Params = {};
 type Query = undefined;

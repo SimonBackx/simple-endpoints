@@ -1,11 +1,11 @@
 import { Encodeable } from '@simonbackx/simple-encoding';
 
-import { EncodedResponse } from './EncodedResponse';
-import { Endpoint } from './Endpoint';
-import { Request } from './Request';
-import { RequestMiddleware } from './RequestMiddleware';
-import { Response } from './Response';
-import { ResponseMiddleware } from './ResponseMiddleware';
+import { EncodedResponse } from './EncodedResponse.js';
+import { Endpoint } from './Endpoint.js';
+import { Request } from './Request.js';
+import { RequestMiddleware } from './RequestMiddleware.js';
+import { Response } from './Response.js';
+import { ResponseMiddleware } from './ResponseMiddleware.js';
 
 /**
  * Adds request middeware functionality to tests
