@@ -7,15 +7,18 @@ import { EncodedResponse } from './EncodedResponse.js';
 import { Request } from './Request.js';
 import { Response } from './Response.js';
 
+/** A route with independently typed URL parameters, query, request body and response body. */
 export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends Encodeable | Encodeable[] | string | Buffer | Uint8Array | Readable | undefined> {
+    /** Decodes query parameters using the request version and Network medium; omitted means no decoded query. */
     protected queryDecoder: Decoder<Query> | undefined;
+    /** Decodes JSON or form-urlencoded input; omitted means the body is not read here. */
     protected bodyDecoder: Decoder<RequestBody> | undefined;
 
+    /** Match the method/path and return URL parameters, or `[false]` to try another endpoint. */
     protected abstract doesMatch(request: Request, response?: http.ServerResponse): [true, Params] | [false];
     abstract handle(request: DecodedRequest<Params, Query, RequestBody>): Promise<Response<ResponseBody>>;
 
-    // Build for testing
-    // it emulates some extra parts of the request to check if everything works
+    /** Matches, decodes, handles and checks response encoding; throws when the route does not match. */
     async test(request: Request): Promise<Response<ResponseBody>> {
         const decodedRequest = await this.decode(request);
         if (decodedRequest) {
@@ -44,6 +47,11 @@ export abstract class Endpoint<Params, Query, RequestBody, ResponseBody extends 
         return null;
     }
 
+    /**
+     * Matches slash-separated paths such as `/items/@id`. Declare placeholders with
+     * String or Number; numeric values must be integers. Returns undefined on mismatch.
+     * Does not match the HTTP method; pass the request path without a query string.
+     */
     static parseParameters<Keys extends string>(
         url: string,
         template: string,
