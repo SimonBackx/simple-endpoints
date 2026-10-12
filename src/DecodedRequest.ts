@@ -19,6 +19,10 @@ export class DecodedRequest<Params, Query, Body> {
      */
     request: Request;
 
+    /**
+     * Decodes only inputs with supplied decoders, requiring a request version when either
+     * decoder is present. Malformed JSON throws a 400 SimpleError; decoder errors propagate.
+     */
     static async fromRequest<Params, Query, Body>(
         request: Request,
         params: Params,

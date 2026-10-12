@@ -61,9 +61,8 @@ export class Router {
         }
     }
 
-    /// Run migrations in the given folder
+    /** Imports endpoint constructors from .ts/.js files, excluding tests and declarations. */
     async loadEndpoints(folder: string) {
-        /// Query all migrations
         const files = await fs.readdir(folder);
 
         for (const file of files) {
@@ -101,6 +100,7 @@ export class Router {
         return null;
     } */
 
+    /** Returns the first matching endpoint and decoded request, or null; does not call handle(). */
     async decode<Params, Query, Body>(request: Request, response?: http.ServerResponse): Promise<{ request: DecodedRequest<Params, Query, Body>; endpoint: Endpoint<Params, Query, Body, any> } | null> {
         for (const endpoint of this.endpoints) {
             const r = await endpoint.decode(request, response);
